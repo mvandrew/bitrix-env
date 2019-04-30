@@ -50,14 +50,14 @@ RUN apt-get -y --no-install-recommends install \
     && dpkg-reconfigure -f noninteractive tzdata
 
 ENV LANG="ru_RU.utf8" \
-    BX_PORT="7755"
+    BX_PORT="80"
 
 RUN usermod -u 1000 www-data
 
-RUN `# --------------- Set Apache server HTTP Port --------------- ` \
-    sed -ri /Listen/s/80/${BX_PORT}/ /etc/apache2/ports.conf \
-    && sed -ri /VirtualHost/s/\\*:80/\\*:7755/ /etc/apache2/sites-available/000-default.conf \
-    && `# --------------- Set Global ServerName --------------- ` \
+#RUN `# --------------- Set Apache server HTTP Port --------------- ` \
+#    sed -ri /Listen/s/80/${BX_PORT}/ /etc/apache2/ports.conf \
+#    && sed -ri /VirtualHost/s/\\*:80/\\*:7755/ /etc/apache2/sites-available/000-default.conf \
+RUN `# --------------- Set Global ServerName --------------- ` \
     && echo "ServerName localhost" > /etc/apache2/conf-available/server-name.conf \
     && ln -snf /etc/apache2/conf-available/server-name.conf /etc/apache2/conf-enabled/server-name.conf \
     && `# --------------- Copy default PHP.ini --------------- ` \

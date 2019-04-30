@@ -1,0 +1,21 @@
+version: '3'
+
+services: 
+
+  db:
+    build: ../../images/bitrix-mysql/5.7
+    restart: always
+    volumes: 
+      - ${DB_FOLDER_HOST}:${DB_FOLDER_CONTAINER}
+
+  bitrix:
+    build: ../../images/bitrix-php/7.1
+    restart: always
+    links:
+      - db:database
+    depends_on:
+      - db
+    volumes: 
+      - ${BITRIX_WWW_HOST}:${BITRIX_WWW_CONTAINER}
+    ports:
+      - ${BITRIX_PORT_HOST}:80

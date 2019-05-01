@@ -8,11 +8,13 @@ ENV BX_TIMEZONE="Europe/Moscow" \
     MYSQL_USER="bitrix_sa" \
     MYSQL_PASSWORD="bitrix_sa_pwd"
 
+# Optional packages
 RUN apt-get update \
     && `# --------------- Install optional packages --------------- ` \
     && apt-get -y --no-install-recommends install \
         net-tools \
         nano \
+        vim \
         mc
 
 # Configure server locale

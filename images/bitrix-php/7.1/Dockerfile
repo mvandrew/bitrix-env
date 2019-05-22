@@ -49,16 +49,34 @@ RUN apt-get -y --no-install-recommends install \
     && ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
     && dpkg-reconfigure -f noninteractive tzdata
 
+ARG BX_SERVER_NAME="localhost"
+
 ENV LANG="ru_RU.utf8" \
-    BX_PORT="80"
+    BX_PORT="80" \
+    BX_PORT_SSL="443" \
+    BX_CERT_PASS="1234567890"
 
 RUN usermod -u 1000 www-data
 
-#RUN `# --------------- Set Apache server HTTP Port --------------- ` \
-#    sed -ri /Listen/s/80/${BX_PORT}/ /etc/apache2/ports.conf \
-#    && sed -ri /VirtualHost/s/\\*:80/\\*:7755/ /etc/apache2/sites-available/000-default.conf \
-RUN `# --------------- Set Global ServerName --------------- ` \
-    && echo "ServerName localhost" > /etc/apache2/conf-available/server-name.conf \
+RUN `# --------------- Generate Cert --------------- ` \
+    && cd /tmp \
+    && openssl genrsa -des3 -passout pass:${BX_CERT_PASS} -out server.pass.key 2048 \
+    && openssl rsa -passin pass:${BX_CERT_PASS} -in server.pass.key -out server.key \
+    && rm server.pass.key \
+    && openssl req -new -key server.key -out server.csr \
+        -subj "/C=RU/ST=Moscow/L=Moscow/O=SelfOrg/OU=IT Dep/CN=${BX_SERVER_NAME}" \
+    && openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.pem -outform PEM \
+    && mv /tmp/server.key /etc/ssl/private/ssl-cert-snakeoil.key \
+    && mv /tmp/server.pem /etc/ssl/certs/ssl-cert-snakeoil.pem \
+    && `# --------------- Set Apache server HTTP Port --------------- ` \
+    && sed -ri /Listen/s/80/${BX_PORT}/ /etc/apache2/ports.conf \
+    && sed -ri /Listen/s/443/${BX_PORT_SSL}/ /etc/apache2/ports.conf \
+    && sed -ri /VirtualHost/s/\\*:80/\\*:${BX_PORT}/ /etc/apache2/sites-available/000-default.conf \
+    && sed -ri /VirtualHost/s/_default_:443/_default_:${BX_PORT_SSL}/ /etc/apache2/sites-available/default-ssl.conf \
+    && a2enmod ssl \
+    && a2ensite default-ssl.conf \
+    `# --------------- Set Global ServerName --------------- ` \
+    && echo "ServerName ${BX_SERVER_NAME}" > /etc/apache2/conf-available/server-name.conf \
     && ln -snf /etc/apache2/conf-available/server-name.conf /etc/apache2/conf-enabled/server-name.conf \
     && `# --------------- Copy default PHP.ini --------------- ` \
     && mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
@@ -66,7 +84,7 @@ RUN `# --------------- Set Global ServerName --------------- ` \
 COPY ./conf.d/php.ini $PHP_INI_DIR/conf.d/user-10-php.ini
 COPY ./conf.d/opcache.ini $PHP_INI_DIR/conf.d/user-20-opcache.ini
 
-EXPOSE ${BX_PORT}
+EXPOSE ${BX_PORT} ${BX_PORT_SSL}
 
 COPY ./docker-entrypoint.sh /
 RUN chmod 775 /docker-entrypoint.sh

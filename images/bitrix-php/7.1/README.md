@@ -2,12 +2,18 @@
 
 Окружение 1С-Битрикс построено на официальном образе [PHP](https://hub.docker.com/_/php).
 
+Образ на [Docker Hub](https://hub.docker.com/r/msav/bitrix-php).
+
 ## Переменные окружения
 
-BX_TIMEZONE
+### BX_TIMEZONE
 
-:   Часовой пояс. По-умолчанию: ```Europe/Moscow```.
+Часовой пояс.
 
-BX_PORT
+По-умолчанию: ```Europe/Moscow```.
 
-:   Порт сервера. По-умолчанию: ```80```.
+### BX_PORT
+
+Порт сервера. 
+
+По-умолчанию: ```80```.

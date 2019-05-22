@@ -9,7 +9,11 @@ services:
       - ${DB_FOLDER_HOST}:${DB_FOLDER_CONTAINER}
 
   bitrix:
-    build: ../../images/bitrix-php/7.1
+    build:
+      context: ../../images/bitrix-php/7.1
+      args: 
+        BX_SERVER_NAME: ${BITRIX_SERVER_NAME}
+    hostname: ${BITRIX_SERVER_NAME}
     restart: always
     links:
       - db:database
@@ -18,4 +22,6 @@ services:
     volumes: 
       - ${BITRIX_WWW_HOST}:${BITRIX_WWW_CONTAINER}
     ports:
-      - ${BITRIX_PORT_HOST}:80
+      - ${BITRIX_PORT_HOST}:${BITRIX_PORT_CONTAINER}
+      - ${BITRIX_PORT_SSL_HOST}:${BITRIX_PORT_SSL_CONTAINER}
+    

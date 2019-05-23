@@ -4,13 +4,15 @@
 
 Образ на [Docker Hub](https://hub.docker.com/r/msav/bitrix-php).
 
-## Переменные окружения
+## Аргументы сборки
 
 ### BX_TIMEZONE
 
 Часовой пояс.
 
 По-умолчанию: ```Europe/Moscow```.
+
+## Переменные окружения
 
 ### BX_PORT
 

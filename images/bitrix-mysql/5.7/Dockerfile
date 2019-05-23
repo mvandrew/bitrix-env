@@ -2,8 +2,9 @@ FROM mysql:5.7
 
 LABEL maintainer "Andrey Mishchenko <info@msav.ru>"
 
-ENV BX_TIMEZONE="Europe/Moscow" \
-    MYSQL_ROOT_PASSWORD="bitrix_pwd" \
+ARG BX_TIMEZONE="Europe/Moscow"
+
+ENV MYSQL_ROOT_PASSWORD="bitrix_pwd" \
     MYSQL_DATABASE="bitrix_db" \
     MYSQL_USER="bitrix_sa" \
     MYSQL_PASSWORD="bitrix_sa_pwd"
@@ -32,6 +33,9 @@ ADD ./conf.d/my.cnf /etc/mysql/conf.d/zz-bitrix.cnf
 # Download MySQLTuner
 ADD https://raw.githubusercontent.com/major/MySQLTuner-perl/master/mysqltuner.pl /root
 RUN chmod 775 /root/mysqltuner.pl
+
+# Create exchange folder
+RUN mkdir /root/exchange
 
 EXPOSE 3306
 CMD [ "mysqld" ]

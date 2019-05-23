@@ -4,7 +4,7 @@ LABEL maintainer "Andrey Mishchenko <info@msav.ru>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ENV BX_TIMEZONE="Europe/Moscow"
+ARG BX_TIMEZONE="Europe/Moscow"
 
 RUN apt-get update \
     && `# --------------- Install common packages --------------- ` \

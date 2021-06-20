@@ -1,0 +1,47 @@
+version: '2'
+
+services:
+  php:
+    build: ./images/php
+    container_name: ${PROJECT}php
+    ports:
+      - '127.0.0.1:9000:9000'
+    restart: always
+    networks:
+      - bitrix
+    volumes_from:
+      - files
+    depends_on:
+      - files
+
+  web:
+    build: ./images/nginx
+    container_name: ${PROJECT}web
+    networks:
+      - bitrix
+    links:
+      - php
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes_from:
+      - files
+    depends_on:
+      - files
+
+  files:
+    image: alpine:latest
+    container_name: ${PROJECT}files
+    volumes:
+      - ./../public:/var/www/bitrix
+    networks:
+      - bitrix
+
+networks:
+  bitrix:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.150.0.0/24

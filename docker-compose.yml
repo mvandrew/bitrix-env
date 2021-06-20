@@ -14,7 +14,7 @@ services:
     depends_on:
       - files
 
-  web:
+  web.local:
     build: ./images/nginx
     container_name: ${PROJECT}web
     networks:

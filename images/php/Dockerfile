@@ -1,6 +1,6 @@
 FROM php:7.4-fpm
 
-LABEL maintainer "Andrey Mishchenko <info@msav.ru>"
+LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -33,8 +33,11 @@ RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
     && echo ${BX_TIMEZONE} > /etc/timezone \
     && dpkg-reconfigure -f noninteractive tzdata
 
-ADD ./php.ini /etc/php/7.4/fpm/conf.d/90-php.ini
-ADD ./php.ini /etc/php/7.4/cli/conf.d/90-php.ini
+RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
+
+#ADD ./php.ini /etc/php/7.4/fpm/conf.d/90-php.ini
+#ADD ./php.ini /etc/php/7.4/cli/conf.d/90-php.ini
+ADD ./php.ini /usr/local/etc/php/conf.d/90-bitrix-php.ini
 
 RUN usermod -u 1000 www-data
 

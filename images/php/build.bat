@@ -1,3 +1,3 @@
 @echo off
 
-docker build --rm -t local/bitrix-php .
+docker build --rm -t msav/bitrix-php .

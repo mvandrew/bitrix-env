@@ -1,4 +1,4 @@
-version: '2'
+version: '3.1'
 
 services:
   php:
@@ -30,11 +30,41 @@ services:
     depends_on:
       - files
 
+  db:
+    build: ./images/mysql
+    container_name: ${PROJECT}db
+    networks:
+      - bitrix
+    restart: always
+    ports:
+      - 3306:3306
+    volumes_from:
+      - files
+    environment:
+      MYSQL_DATABASE: bitrix
+      MYSQL_USER: bitrix
+      MYSQL_PASSWORD: bitrixpwd
+      MYSQL_ROOT_PASSWORD: rootpwd
+
+  adminer:
+    image: adminer
+    container_name: ${PROJECT}adminer
+    networks:
+      - bitrix
+    links:
+      - db:db
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      UPLOAD: 1024M
+
   files:
     image: alpine:latest
     container_name: ${PROJECT}files
     volumes:
       - ./../public:/var/www/bitrix
+      - ./../db:/var/lib/mysql
     networks:
       - bitrix
 

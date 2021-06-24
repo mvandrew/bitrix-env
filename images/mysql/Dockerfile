@@ -15,6 +15,10 @@ RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
     && dpkg-reconfigure -f noninteractive tzdata
 
 ADD bitrix.cnf /etc/mysql/conf.d/zz-bitrix.cnf
+ADD mysqltuner.pl /root/mysqltuner.pl
+
+RUN chown root:root /root/mysqltuner.pl \
+    && chmod 775 /root/mysqltuner.pl
 
 CMD ["mysqld"]
 

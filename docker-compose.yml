@@ -59,10 +59,26 @@ services:
     environment:
       UPLOAD: 1024M
 
+  memcached:
+    image: memcached:alpine
+    restart: always
+    container_name: ${PROJECT}memcached
+    volumes_from:
+      - files
+    ports:
+      - 11211:11211
+    networks:
+      - bitrix
+
   files:
     image: alpine:latest
     container_name: ${PROJECT}files
     volumes:
+      - ./../logs/nginx:/var/log/nginx
+      - ./../logs/php:/var/log/php
+      - ./../logs/mysql:/var/log/mysql
+      - ./../logs/memcached:/var/log/memcached
+      - ./../cache:/var/lib/memcached
       - ./../public:/var/www/bitrix
       - ./../db:/var/lib/mysql
     networks:

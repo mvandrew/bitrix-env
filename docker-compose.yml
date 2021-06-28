@@ -1,4 +1,4 @@
-version: '3.1'
+version: '2'
 
 services:
   php:
@@ -6,13 +6,14 @@ services:
     container_name: ${PROJECT}php
     ports:
       - '127.0.0.1:9000:9000'
-    restart: always
     networks:
       - bitrix
     volumes_from:
       - files
     depends_on:
       - files
+    environment: 
+      - SITE_DOMAIN=${SITE_DOMAIN}
 
   web.local:
     build: ./images/nginx
@@ -29,6 +30,8 @@ services:
       - files
     depends_on:
       - files
+    environment: 
+      - SITE_DOMAIN=${SITE_DOMAIN}
 
   db:
     build: ./images/mysql
@@ -63,6 +66,8 @@ services:
     image: memcached:alpine
     restart: always
     container_name: ${PROJECT}memcached
+    command: 
+      - "--memory-limit=512"
     volumes_from:
       - files
     ports:
@@ -80,6 +85,7 @@ services:
       - ./../logs/memcached:/var/log/memcached
       - ./../cache:/var/lib/memcached
       - ./../public:/var/www/bitrix
+      - ${UPLOAD_FOLDER}:/var/www/bitrix/upload
       - ./../db:/var/lib/mysql
     networks:
       - bitrix

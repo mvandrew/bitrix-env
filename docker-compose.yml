@@ -5,7 +5,7 @@ services:
     build: ./images/php
     container_name: ${PROJECT}php
     ports:
-      - '127.0.0.1:9000:9000'
+      - ${PHP_PORT}:9000
     networks:
       - bitrix
     volumes_from:
@@ -40,14 +40,14 @@ services:
       - bitrix
     restart: always
     ports:
-      - 3306:3306
+      - ${MYSQL_PORT}:3306
     volumes_from:
       - files
     environment:
-      MYSQL_DATABASE: bitrix
-      MYSQL_USER: bitrix
-      MYSQL_PASSWORD: bitrixpwd
-      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: ${HOSTING_USER}
+      MYSQL_USER: ${HOSTING_USER}
+      MYSQL_PASSWORD: ${HOSTING_USER_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
 
   adminer:
     image: adminer
@@ -58,7 +58,7 @@ services:
       - db:db
     restart: always
     ports:
-      - 8080:8080
+      - ${ADMINER_PORT}:8080
     environment:
       UPLOAD: 1024M
 
@@ -71,7 +71,7 @@ services:
     volumes_from:
       - files
     ports:
-      - 11211:11211
+      - ${MEMCACHED_PORT}:11211
     networks:
       - bitrix
 
@@ -79,14 +79,14 @@ services:
     image: alpine:latest
     container_name: ${PROJECT}files
     volumes:
-      - ./../logs/nginx:/var/log/nginx
-      - ./../logs/php:/var/log/php
-      - ./../logs/mysql:/var/log/mysql
-      - ./../logs/memcached:/var/log/memcached
-      - ./../cache:/var/lib/memcached
-      - ./../public:/var/www/bitrix
-      - ${UPLOAD_FOLDER}:/var/www/bitrix/upload
-      - ./../db:/var/lib/mysql
+      - ${DATA_PATH}/logs/nginx:/var/log/nginx
+      - ${DATA_PATH}/logs/php:/var/log/php
+      - ${DATA_PATH}/logs/mysql:/var/log/mysql
+      - ${DATA_PATH}/logs/memcached:/var/log/memcached
+      - ${DATA_PATH}/cache:/var/lib/memcached
+      - ${DATA_PATH}/public:/var/www/bitrix
+      - ${UPLOAD_PATH}:/var/www/bitrix/upload
+      - ${DATA_PATH}/db:/var/lib/mysql
     networks:
       - bitrix
 

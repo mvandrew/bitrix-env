@@ -44,7 +44,8 @@ RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 
 #ADD ./php.ini /etc/php/7.4/fpm/conf.d/90-bitrix-php.ini
 #ADD ./php.ini /etc/php/7.4/cli/conf.d/90-bitrix-php.ini
-ADD ./php.ini /usr/local/etc/php/conf.d/90-bitrix-php.ini
+ADD ./php.ini /usr/local/etc/php/conf.d/zzz-bitrix-php.ini
+ADD ./fpm.conf /usr/local/etc/php-fpm.d/zzz-bitrix-fpm.conf
 ADD entrypoint.sh /usr/bin
 
 RUN usermod -u 1000 www-data && \

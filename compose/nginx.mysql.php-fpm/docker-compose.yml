@@ -2,7 +2,7 @@ version: '2'
 
 services:
   php:
-    build: ./images/php
+    build: ../../images/php-fpm
     container_name: ${PROJECT}php
     ports:
       - ${PHP_PORT}:9000
@@ -16,7 +16,7 @@ services:
       - SITE_DOMAIN=${SITE_DOMAIN}
 
   web.local:
-    build: ./images/nginx
+    build: ../../images/nginx
     container_name: ${PROJECT}web
     networks:
       - bitrix
@@ -34,7 +34,7 @@ services:
       - SITE_DOMAIN=${SITE_DOMAIN}
 
   db:
-    build: ./images/mysql
+    build: ../../images/mysql
     container_name: ${PROJECT}db
     networks:
       - bitrix
@@ -93,7 +93,3 @@ services:
 networks:
   bitrix:
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.150.0.0/24

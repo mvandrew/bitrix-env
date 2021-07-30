@@ -46,6 +46,28 @@ services:
     environment:
       UPLOAD: 1024M
 
+  redis:
+    image: redis
+    container_name: ${PROJECT}redis
+    networks:
+      - bitrix
+    restart: always
+    ports:
+      - ${REDIS_PORT}:6379
+    environment: 
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  redisadmin:
+    image: erikdubbelboer/phpredisadmin
+    container_name: ${PROJECT}redisadmin
+    networks:
+      - bitrix
+    restart: always
+    ports:
+      - ${REDIS_ADMIN_PORT}:80
+    environment: 
+      REDIS_1_HOST: redis
+
   files:
     image: alpine:latest
     container_name: ${PROJECT}files
@@ -53,6 +75,7 @@ services:
       - ${DATA_PATH}/public:/var/www/bitrix
       - ${UPLOAD_PATH}:/var/www/bitrix/upload
       - ${DATA_PATH}/db:/var/lib/mysql
+      - ${DATA_PATH}/logs/php:/var/log/php
     networks:
       - bitrix
 

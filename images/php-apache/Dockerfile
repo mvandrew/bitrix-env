@@ -26,8 +26,8 @@ RUN apt-get update && \
     locales \
     tzdata \
     ssl-cert \
-    && pecl install mcrypt memcache memcached apcu xdebug imagick zip \
-    && docker-php-ext-enable mcrypt memcached apcu xdebug imagick zip \
+    && pecl install mcrypt memcache memcached apcu xdebug imagick zip redis \
+    && docker-php-ext-enable mcrypt memcached apcu xdebug imagick zip redis \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 RUN docker-php-ext-configure gd \
@@ -46,7 +46,8 @@ RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
 RUN sed -i 's/\/var\/www\/html/\/var\/www\/bitrix/g' /etc/apache2/sites-available/000-default.conf \
     && sed -i 's/\/var\/www\/html/\/var\/www\/bitrix/g' /etc/apache2/sites-available/default-ssl.conf \
     && a2ensite default-ssl.conf \
-    && a2enmod ssl
+    && a2enmod ssl \
+    && a2enmod rewrite
 
 RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 

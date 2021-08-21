@@ -26,7 +26,9 @@ RUN apt-get update && \
     locales \
     tzdata \
     ssl-cert \
+    libonig-dev \
     && pecl install mcrypt memcache memcached apcu xdebug imagick zip redis \
+    && docker-php-ext-install mbstring \
     && docker-php-ext-enable mcrypt memcached apcu xdebug imagick zip redis \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
@@ -34,7 +36,7 @@ RUN docker-php-ext-configure gd \
     --with-jpeg \
     --with-xpm \
     --with-freetype
-RUN docker-php-ext-install mysqli gd intl opcache
+RUN docker-php-ext-install mysqli pdo pdo_mysql gd intl opcache
 
 RUN make-ssl-cert generate-default-snakeoil
 

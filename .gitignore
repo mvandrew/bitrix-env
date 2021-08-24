@@ -1,3 +1,4 @@
 .env
 .vscode
 local
+.DS_Store

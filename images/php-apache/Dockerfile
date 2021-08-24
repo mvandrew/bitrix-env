@@ -59,6 +59,9 @@ ADD ./php.ini /usr/local/etc/php/conf.d/zzz-bitrix-php.ini
 RUN usermod -u 1000 www-data
 #chmod 775 /usr/bin/entrypoint.sh
 
+RUN mkdir /var/www/tmp \
+    && chown www-data:www-data /var/www/tmp
+
 WORKDIR "/var/www/bitrix"
 
 #ENTRYPOINT [ "/usr/bin/entrypoint.sh" ]

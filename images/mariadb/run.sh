@@ -1,3 +1,3 @@
 #!/bin/sh
 
-sudo docker run --rm -it msav/bitrix-mariadb /bin/bash
+sudo docker run -p 3306:3306 --name bitrix-mariadb --rm -d msav/bitrix-mariadb

@@ -1,0 +1,23 @@
+version: '2'
+
+services: 
+  db:
+    build: ./
+    container_name: BitrixMariaDB
+    networks:
+      - bitrix
+    restart: always
+    ports:
+      - ${MYSQL_PORT}:3306
+    environment:
+      MYSQL_DATABASE: ${HOSTING_USER}
+      MYSQL_USER: ${HOSTING_USER}
+      MYSQL_PASSWORD: ${HOSTING_USER_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      innodb_buffer_pool_size: ${innodb_buffer_pool_size}
+      innodb_buffer_pool_instances: ${innodb_buffer_pool_instances}
+      innodb_log_file_size: ${innodb_log_file_size}
+
+networks:
+  bitrix:
+    driver: bridge

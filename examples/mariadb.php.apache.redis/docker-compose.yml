@@ -2,7 +2,7 @@ version: '2'
 
 services:
   web.local:
-    build: ../../images/php-apache
+    image: msav/bitrix-php-apache
     container_name: ${PROJECT}web
     networks:
       - bitrix
@@ -16,9 +16,11 @@ services:
       - files
     environment: 
       - SITE_DOMAIN=${SITE_DOMAIN}
+      - SET_FUNC_OVERLOAD=${SET_FUNC_OVERLOAD}
+      - MEMORY_LIMIT=${MEMORY_LIMIT}
 
   db:
-    build: ../../images/mariadb
+    image: msav/bitrix-mariadb
     container_name: ${PROJECT}db
     networks:
       - bitrix

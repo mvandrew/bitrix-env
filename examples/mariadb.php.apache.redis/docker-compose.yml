@@ -18,7 +18,7 @@ services:
       - SITE_DOMAIN=${SITE_DOMAIN}
 
   db:
-    build: ../../images/mariadb
+    image: msav/bitrix-mariadb
     container_name: ${PROJECT}db
     networks:
       - bitrix

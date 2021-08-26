@@ -2,11 +2,28 @@ FROM php:7.4-apache
 
 LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
-ENV SITE_DOMAIN="mydomain.com"
+ARG SITE_DOMAIN="mydomain.com"
+ENV SITE_DOMAIN ${SITE_DOMAIN}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 ARG BX_TIMEZONE="Europe/Moscow"
+ENV BX_TIMEZONE ${BX_TIMEZONE}
+
+
+# Настройки PHP
+ARG SET_FUNC_OVERLOAD=0
+ENV SET_FUNC_OVERLOAD ${SET_FUNC_OVERLOAD}
+
+ARG MEMORY_LIMIT=2048M
+ENV MEMORY_LIMIT ${MEMORY_LIMIT}
+
+ARG PHP_CONFIG_FILE="/usr/local/etc/php/conf.d/zzz-bitrix-php.ini"
+ENV PHP_CONFIG_FILE ${PHP_CONFIG_FILE}
+
+ARG PHP_CONFIG_FILE_EX="/usr/local/etc/php/conf.d/zzzz-bitrix-php-ex.ini"
+ENV PHP_CONFIG_FILE_EX ${PHP_CONFIG_FILE_EX}
+
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends install \
@@ -27,6 +44,7 @@ RUN apt-get update && \
     tzdata \
     ssl-cert \
     libonig-dev \
+    wget \
     && pecl install mcrypt memcache memcached apcu xdebug imagick zip redis \
     && docker-php-ext-install mbstring \
     && docker-php-ext-enable mcrypt memcached apcu xdebug imagick zip redis \
@@ -53,17 +71,18 @@ RUN sed -i 's/\/var\/www\/html/\/var\/www\/bitrix/g' /etc/apache2/sites-availabl
 
 RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 
-ADD ./php.ini /usr/local/etc/php/conf.d/zzz-bitrix-php.ini
-#ADD entrypoint.sh /usr/bin
+COPY ./conf/php.ini ${PHP_CONFIG_FILE}
 
 RUN usermod -u 1000 www-data
-#chmod 775 /usr/bin/entrypoint.sh
 
-RUN mkdir /var/www/tmp \
-    && chown www-data:www-data /var/www/tmp
+RUN mkdir /var/www/session \
+    && chown www-data:www-data /var/www/session
 
 WORKDIR "/var/www/bitrix"
 
-#ENTRYPOINT [ "/usr/bin/entrypoint.sh" ]
+COPY bitrix-entrypoint.sh /usr/local/bin
+ENTRYPOINT [ "bitrix-entrypoint.sh" ]
+STOPSIGNAL SIGWINCH
 
 EXPOSE 80 443
+CMD ["apache2-foreground"]

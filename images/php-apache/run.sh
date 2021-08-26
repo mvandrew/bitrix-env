@@ -1,3 +1,3 @@
 #!/bin/sh
 
-sudo docker run --rm -it msav/bitrix-php /bin/bash
+sudo docker run -p 80:80 --name bitrix-php-apache --rm -d msav/bitrix-php-apache

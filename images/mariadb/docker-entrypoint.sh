@@ -346,11 +346,6 @@ _mysql_want_help() {
 }
 
 _main() {
-	echo "[mysqld]" > /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
-	&& echo "innodb_buffer_pool_size=${innodb_buffer_pool_size}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
-	&& echo "innodb_buffer_pool_instances=${innodb_buffer_pool_instances}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
-	&& echo "innodb_log_file_size=${innodb_log_file_size}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf
-
 	# if command starts with an option, prepend mysqld
 	if [ "${1:0:1}" = '-' ]; then
 		set -- mysqld "$@"
@@ -398,6 +393,11 @@ _main() {
 	fi
 	exec "$@"
 }
+
+echo "[mysqld]" > /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
+&& echo "innodb_buffer_pool_size=${innodb_buffer_pool_size}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
+&& echo "innodb_buffer_pool_instances=${innodb_buffer_pool_instances}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
+&& echo "innodb_log_file_size=${innodb_log_file_size}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf
 
 # If we are sourced from elsewhere, don't perform any further actions
 if ! _is_sourced; then

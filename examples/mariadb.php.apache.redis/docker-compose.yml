@@ -2,7 +2,7 @@ version: '2'
 
 services:
   web.local:
-    image: msav/bitrix-php-apache
+    image: msav/bitrix-php-apache:latest
     container_name: ${PROJECT}web
     networks:
       - bitrix
@@ -20,7 +20,7 @@ services:
       - MEMORY_LIMIT=${MEMORY_LIMIT}
 
   db:
-    image: msav/bitrix-mariadb
+    image: msav/bitrix-mariadb:latest
     container_name: ${PROJECT}db
     networks:
       - bitrix

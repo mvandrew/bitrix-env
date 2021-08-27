@@ -400,10 +400,10 @@ echo "[mysqld]" > /etc/mysql/conf.d/zzz-bitrix-ext.cnf \
 && echo "innodb_log_file_size=${innodb_log_file_size}" >> /etc/mysql/conf.d/zzz-bitrix-ext.cnf
 
 # Обновление прав доступа к файлам
-MYSQL_LIB_PATH="/var/lib/mysql"
-chown -R mysql:mysql $MYSQL_LIB_PATH
-chmod 775 $(find ${MYSQL_LIB_PATH} -type d)
-chmod 664 $(find ${MYSQL_LIB_PATH} -type f)
+#MYSQL_LIB_PATH="/var/lib/mysql"
+#chown -R mysql:mysql $MYSQL_LIB_PATH
+#chmod 775 $(find ${MYSQL_LIB_PATH} -type d)
+#chmod 664 $(find ${MYSQL_LIB_PATH} -type f)
 
 # If we are sourced from elsewhere, don't perform any further actions
 if ! _is_sourced; then

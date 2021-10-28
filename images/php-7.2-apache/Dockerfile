@@ -49,3 +49,7 @@ RUN apt-get update && \
     && pecl install mcrypt memcache memcached apcu imagick zip redis oauth \
     && docker-php-ext-enable mcrypt memcached apcu imagick zip redis oauth \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+
+RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
+    && echo ${BX_TIMEZONE} > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata

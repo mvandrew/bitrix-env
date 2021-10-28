@@ -36,6 +36,7 @@ RUN apt-get update && \
     libxslt-dev \
     locales \
     tzdata \
+    ssl-cert \
     libonig-dev \
     wget \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
@@ -44,6 +45,8 @@ RUN apt-get update && \
     && pecl install mcrypt memcache memcached apcu imagick zip redis oauth \
     && docker-php-ext-enable mcrypt memcached apcu imagick zip redis oauth \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+
+RUN make-ssl-cert generate-default-snakeoil
 
 RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
     && echo ${BX_TIMEZONE} > /etc/timezone \
@@ -57,13 +60,15 @@ RUN usermod -u 1000 www-data
 RUN mkdir /var/www/session \
     && chown -R www-data:www-data /var/www
 
-RUN a2enmod rewrite proxy headers include remoteip
+RUN a2enmod rewrite proxy headers include remoteip ssl
 
 RUN a2dissite 000-default.conf \
     && a2dissite default-ssl.conf
 
 COPY sites-available/bitrix.conf /etc/apache2/sites-available
-RUN a2ensite bitrix.conf
+COPY sites-available/bitrix-ssl.conf /etc/apache2/sites-available
+RUN a2ensite bitrix.conf \
+    && a2ensite bitrix.conf
 
 WORKDIR "/var/www/html"
 

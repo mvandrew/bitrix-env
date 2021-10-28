@@ -68,7 +68,7 @@ RUN a2dissite 000-default.conf \
 COPY sites-available/bitrix.conf /etc/apache2/sites-available
 COPY sites-available/bitrix-ssl.conf /etc/apache2/sites-available
 RUN a2ensite bitrix.conf \
-    && a2ensite bitrix.conf
+    && a2ensite bitrix-ssl.conf
 
 WORKDIR "/var/www/html"
 
@@ -77,4 +77,4 @@ ENTRYPOINT [ "bitrix-entrypoint.sh" ]
 STOPSIGNAL SIGWINCH
 
 EXPOSE 80 443
-CMD ["apache2-foreground"]
+CMD [ "apache2-foreground" ]

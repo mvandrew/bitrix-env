@@ -14,7 +14,7 @@ fi
 
 # Обновление прав доступа к файлам
 chown -R www-data:www-data $BITRIX_PATH
-chmod 775 $(find ${BITRIX_PATH} -type d)
-chmod 664 $(find ${BITRIX_PATH} -type f)
+#chmod 775 $(find ${BITRIX_PATH} -type d)
+#chmod 664 $(find ${BITRIX_PATH} -type f)
 
 exec "$@"

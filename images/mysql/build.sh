@@ -1,3 +1,3 @@
-#!/bin/sh
+#!/bin/bash
 
-sudo docker build --rm -t msav/bitrix-mysql .
+docker build --rm -t msav/bitrix-mysql:5 -t msav/bitrix-mysql:5.7 -t msav/bitrix-mysql:latest .

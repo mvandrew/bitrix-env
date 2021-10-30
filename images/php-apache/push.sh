@@ -1,3 +1,3 @@
 #!/bin/sh
 
-sudo docker push msav/bitrix-php-apache:latest
+docker image push --all-tags msav/bitrix-php-apache

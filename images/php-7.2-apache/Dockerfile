@@ -42,8 +42,8 @@ RUN apt-get update && \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install -j$(nproc) bz2 bcmath calendar gd pdo pdo_mysql iconv mbstring intl tidy xmlrpc mysqli xsl sockets xml soap \
     && pecl channel-update pecl.php.net \
-    && pecl install mcrypt memcache memcached apcu imagick zip redis oauth \
-    && docker-php-ext-enable mcrypt memcached apcu imagick zip redis oauth \
+    && pecl install mcrypt memcache memcached imagick zip redis oauth \
+    && docker-php-ext-enable mcrypt memcached imagick zip redis oauth \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 RUN make-ssl-cert generate-default-snakeoil

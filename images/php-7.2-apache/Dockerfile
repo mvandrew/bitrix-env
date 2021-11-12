@@ -16,6 +16,8 @@ ENV PHP_CONFIG_FILE ${PHP_CONFIG_FILE}
 ARG PHP_CONFIG_FILE_EX="/usr/local/etc/php/conf.d/zzzz-bitrix-php-ex.ini"
 ENV PHP_CONFIG_FILE_EX ${PHP_CONFIG_FILE_EX}
 
+ENV PHP_EX_OPCACHE_ENABLED=1
+
 RUN apt-get update && \
     apt-get -y --no-install-recommends install \
     pkg-config \

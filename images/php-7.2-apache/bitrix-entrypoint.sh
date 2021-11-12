@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Конифиг PHP
+# Расширение конфигурации PHP
 echo "[php]" > "${PHP_CONFIG_FILE_EX}" \
     && echo "memory_limit = ${MEMORY_LIMIT}" >> "${PHP_CONFIG_FILE_EX}"
 
@@ -13,7 +13,7 @@ if [ ! -f $BITRIX_INDEX ] && [ ! -f $BITRIX_SETUP ]; then
 fi
 
 # Обновление прав доступа к файлам
-#chown -R www-data:www-data $BITRIX_PATH
+chown -R www-data:www-data $BITRIX_PATH
 #chmod 775 $(find ${BITRIX_PATH} -type d)
 #chmod 664 $(find ${BITRIX_PATH} -type f)
 

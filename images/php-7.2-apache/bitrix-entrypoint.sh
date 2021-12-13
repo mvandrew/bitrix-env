@@ -13,7 +13,7 @@ if [ ! -f $BITRIX_INDEX ] && [ ! -f $BITRIX_SETUP ]; then
 fi
 
 # Контроль запуска модуля opcache
-echo "[opcache]" > "${PHP_CONFIG_FILE_EX}" \
+echo "[opcache]" >> "${PHP_CONFIG_FILE_EX}" \
     && echo "opcache.enable = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}" \
     && echo "opcache.enable_cli = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}"
 

@@ -45,7 +45,8 @@ RUN apt-get update && \
     && docker-php-ext-configure opcache --enable-opcache \
     && docker-php-ext-install -j$(nproc) bz2 bcmath calendar gd pdo pdo_mysql iconv mbstring intl tidy xmlrpc mysqli xsl sockets xml soap opcache \
     && pecl channel-update pecl.php.net \
-    && pecl install mcrypt memcache memcached imagick zip redis oauth \
+    && pecl install mcrypt memcache memcached imagick zip oauth igbinary \
+    && pecl bundle redis && cd redis && phpize && ./configure --enable-redis-igbinary && make && make install \
     && docker-php-ext-enable mcrypt memcached imagick zip redis oauth opcache \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 

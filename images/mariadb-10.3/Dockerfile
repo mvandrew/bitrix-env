@@ -24,6 +24,6 @@ RUN echo "!include /etc/mysql/bitrix.cnf" >> /etc/mysql/my.cnf
 
 VOLUME /etc/mysql/bitrix.d
 
-CMD ["mariadbd"]
+CMD ["mysqld"]
 
 EXPOSE 3306

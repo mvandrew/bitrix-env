@@ -485,7 +485,12 @@ RUN set -eux \
 	&& pecl install xlswriter \
 	# Enabling
 	&& docker-php-ext-enable xlswriter \
-	&& true
+	&& true \
+
+# Add russian trusted certs
+COPY ssl/russia/russian_trusted_root_ca_pem.crt /usr/local/share/ca-certificates
+COPY ssl/russia/russian_trusted_sub_ca_pem.crt /usr/local/share/ca-certificates
+RUN update-ca-certificates
 
 RUN make-ssl-cert generate-default-snakeoil
 

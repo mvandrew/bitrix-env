@@ -2,7 +2,7 @@
 skip-external-locking
 default-storage-engine = innodb
 transaction-isolation = READ-COMMITTED
-max_allowed_packet = 16M
+max_allowed_packet = 256M
 myisam-recover-options = BACKUP
 explicit_defaults_for_timestamp = 1
 expire_logs_days = 10

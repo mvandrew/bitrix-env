@@ -488,8 +488,9 @@ RUN set -eux \
 	&& true \
 
 # Add russian trusted certs
-COPY ssl/russia/russian_trusted_root_ca_pem.crt /usr/local/share/ca-certificates
-COPY ssl/russia/russian_trusted_sub_ca_pem.crt /usr/local/share/ca-certificates
+RUN mkdir "/usr/local/share/ca-certificates/extra"
+COPY "ssl/russia/russian_trusted_root_ca_pem.crt" "/usr/local/share/ca-certificates/extra/russian_trusted_root_ca_pem.crt"
+COPY "ssl/russia/russian_trusted_sub_ca_pem.crt" "/usr/local/share/ca-certificates/extra/russian_trusted_sub_ca_pem.crt"
 RUN update-ca-certificates
 
 RUN make-ssl-cert generate-default-snakeoil

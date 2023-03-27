@@ -36,6 +36,9 @@ ENV SITE_IP ${SITE_IP}
 ARG PROXY_IPS="127.0.0.1 127.0.0.2"
 ENV PROXY_IPS ${PROXY_IPS}
 
+ARG MBSTRING_FUNC_OVERLOAD="2"
+ENV MBSTRING_FUNC_OVERLOAD ${MBSTRING_FUNC_OVERLOAD}
+
 # https://github.com/devilbox/docker-php-fpm/blob/master/Dockerfiles/mods/Dockerfile-7.4
 
 RUN set -eux \

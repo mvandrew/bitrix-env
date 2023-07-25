@@ -11,7 +11,8 @@ sed -i "s/RPAFproxy_ips.*/RPAFproxy_ips ${PROXY_IPS}/" /etc/apache2/mods-availab
 
 # Расширение конфигурации PHP
 echo "[php]" > "${PHP_CONFIG_FILE_EX}" \
-    && echo "memory_limit = ${MEMORY_LIMIT}" >> "${PHP_CONFIG_FILE_EX}"
+    && echo "memory_limit = ${MEMORY_LIMIT}" >> "${PHP_CONFIG_FILE_EX}" \
+    && echo "mbstring.func_overload = ${MBSTRING_FUNC_OVERLOAD}" >> "${PHP_CONFIG_FILE_EX}"
 
 # Проверка необходимости залить установщик Битрикс
 SESSION_PATH="/var/www/html"

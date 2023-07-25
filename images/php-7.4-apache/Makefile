@@ -3,7 +3,6 @@ build:
 
 push: build
 	docker push msav/bitrix-php-apache:7.4
-	docker push msav/bitrix-php-apache:latest
 
 run: build
 	docker run -p 80:80 --name bitrix-php-apache --rm -d msav/bitrix-php-apache:7.4

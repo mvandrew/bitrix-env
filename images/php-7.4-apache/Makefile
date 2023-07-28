@@ -1,4 +1,5 @@
 build:
+	docker pull php:7.4-apache
 	docker build --rm -t msav/bitrix-php-apache:7.4 .
 
 push: build

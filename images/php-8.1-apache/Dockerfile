@@ -39,6 +39,19 @@ ENV PROXY_IPS ${PROXY_IPS}
 ARG MBSTRING_FUNC_OVERLOAD="2"
 ENV MBSTRING_FUNC_OVERLOAD ${MBSTRING_FUNC_OVERLOAD}
 
+# Параметры подключения к почтовому ящику
+ARG SMTP_HOST="smtp.yandex.ru"
+ENV SMTP_HOST ${SMTP_HOST}
+ARG SMTP_PORT="587"
+ENV SMTP_PORT ${SMTP_PORT}
+ARG SMTP_EMAIL="my@email.ru"
+ENV SMTP_EMAIL ${SMTP_EMAIL}
+ARG SMTP_PASSWORD="password"
+ENV SMTP_PASSWORD ${SMTP_PASSWORD}
+ARG SMTP_AUTHENTICATION
+ARG SMTP_AUTHENTICATION_METHOD
+ARG SMTP_ENABLE_TLS
+
 # https://github.com/devilbox/docker-php-fpm/blob/master/Dockerfiles/mods/Dockerfile-7.4
 
 RUN set -eux \
@@ -101,6 +114,8 @@ RUN set -eux \
         pkg-config \
         re2c \
         xz-utils \
+# Mail \
+        msmtp \
 #    && docker-php-ext-configure gd --with-webp --with-jpeg --with-xpm --with-freetype \
 #    && docker-php-ext-configure opcache --enable-opcache \
 #    && docker-php-ext-install -j$(nproc) ctype \
@@ -557,6 +572,8 @@ RUN set -eux \
     && pear list | grep -oiE '^DB\s' \
     \
     && true
+
+COPY conf/msmtprc /etc/msmtprc
 
 COPY bitrix-entrypoint.sh /usr/local/bin
 ENTRYPOINT [ "bitrix-entrypoint.sh" ]

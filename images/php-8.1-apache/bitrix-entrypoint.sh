@@ -35,6 +35,12 @@ if [ "$ENABLE_SSL" = 1 ]; then
   a2ensite bitrix-ssl.conf
 fi
 
+# Параметры доступа к почтовому серверу
+sed -i "s/#SMTP_HOST#/${SMTP_HOST}/" /etc/msmtprc \
+  && sed -i "s/#SMTP_PORT#/${SMTP_PORT}/" /etc/msmtprc \
+  && sed -i "s/#SMTP_EMAIL#/${SMTP_EMAIL}/" /etc/msmtprc \
+  && sed -i "s/#SMTP_PASSWORD#/${SMTP_PASSWORD}/" /etc/msmtprc
+
 # Обновление прав доступа к файлам
 chown -R www-data:www-data $BITRIX_PATH
 chmod 775 $(find ${SESSION_PATH} -type d)

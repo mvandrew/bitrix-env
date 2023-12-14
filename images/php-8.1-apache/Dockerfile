@@ -280,11 +280,11 @@ RUN set -eux \
 	&& true
 
 # -------------------- Installing PHP Extension: opcache --------------------
-#RUN set -eux \
-#	# Installation: Generic
-#	# Type:         Built-in extension
-#	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) opcache \
-#	&& true
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) opcache \
+	&& true
 
 # -------------------- Installing PHP Extension: lz4 --------------------
 RUN set -eux \
@@ -493,7 +493,7 @@ WORKDIR /var/www/html
 RUN set -eux \
 	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.1' \
     \
-#    && php -m | grep -oiE '^Zend OPcache$' \
+    && php -m | grep -oiE '^Zend OPcache$' \
     && php -m | grep -oiE '^bz2$' \
     && php -m | grep -oiE '^calendar$' \
     && php -m | grep -oiE '^ctype$' \

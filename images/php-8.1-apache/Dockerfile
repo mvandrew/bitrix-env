@@ -2,7 +2,7 @@ FROM php:8.1-apache
 
 LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
-#ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 ARG BX_TIMEZONE="Europe/Moscow"
 ENV BX_TIMEZONE ${BX_TIMEZONE}
@@ -116,49 +116,7 @@ RUN set -eux \
         xz-utils \
 # Mail \
         msmtp \
-#    && docker-php-ext-configure gd --with-webp --with-jpeg --with-xpm --with-freetype \
-#    && docker-php-ext-configure opcache --enable-opcache \
-#    && docker-php-ext-install -j$(nproc) ctype \
-#      curl \
-#      dom \
-#      exif \
-#      fileinfo \
-#      ftp \
-#      gettext \
-#      json \
-#      ldap \
-#      mysqlnd \
-#      bz2 \
-#      bcmath \
-#      calendar \
-#      gd \
-#      pdo \
-#      pdo_mysql \
-#      iconv \
-#      mbstring \
-#      intl \
-#      tidy \
-#      xmlrpc \
-#      xsl \
-#      sockets \
-#      xml \
-#      soap \
-#      opcache \
     && pecl channel-update pecl.php.net \
-#    && pecl install mcrypt memcache memcached imagick zip redis oauth \
-#    && docker-php-ext-enable exif \
-#      ftp \
-#      gettext \
-#      json \
-#      ldap \
-#      mysqlnd \
-#      mcrypt \
-#      memcached \
-#      imagick \
-#      zip \
-#      redis \
-#      oauth \
-#      opcache \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* \
     && true
 

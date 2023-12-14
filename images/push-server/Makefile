@@ -1,6 +1,6 @@
 build:
 	docker pull centos:7
-	docker node:8-alpine
+	docker pull node:8-alpine
 	docker build --rm -t msav/bitrix-push-server:2 .
 
 push: build

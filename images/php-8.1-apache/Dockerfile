@@ -533,6 +533,13 @@ RUN set -eux \
 
 COPY conf/msmtprc /etc/msmtprc
 
+# Дополнительная конфигурация Битрикс окружения
+RUN mkdir "/etc/apache2/conf-bx" \
+    && chown root:root -R "/etc/apache2/conf-bx" \
+    && chmod 755 -R "/etc/apache2/conf-bx" \
+    && echo "IncludeOptional conf-bx/*.conf" >> "/etc/apache2/apache2.conf"
+COPY conf/apache2/conf-bx/* /etc/apache2/conf-bx
+
 COPY bitrix-entrypoint.sh /usr/local/bin
 ENTRYPOINT [ "bitrix-entrypoint.sh" ]
 STOPSIGNAL SIGWINCH

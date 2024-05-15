@@ -159,8 +159,10 @@ RUN set -eux \
 	# Type:         Built-in extension
 	# Custom:       configure command
 	&& docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype \
+    && docker-php-ext-configure ftp --with-openssl-dir=/usr \
 	# Installation
 	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) gd \
+    && docker-php-ext-install ftp \
 	&& true
 
 # -------------------- Installing PHP Extension: imagick --------------------
@@ -490,46 +492,46 @@ WORKDIR /var/www/html
 ##
 ## Проверка
 ##
-#RUN set -eux \
-#	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.2' \
-#    \
-#    && php -m | grep -oiE '^Zend OPcache$' \
-#    && php -m | grep -oiE '^bz2$' \
-#    && php -m | grep -oiE '^calendar$' \
-#    && php -m | grep -oiE '^ctype$' \
-#    && php -m | grep -oiE '^curl$' \
-#    && php -m | grep -oiE '^dom$' \
-#    && php -m | grep -oiE '^exif$' \
-#    && php -m | grep -oiE '^fileinfo$' \
-#    && php -m | grep -oiE '^ftp$' \
-#    && php -m | grep -oiE '^gd$' \
-#    && php -m | grep -oiE '^gettext$' \
-#    && php -m | grep -oiE '^iconv$' \
-#    && php -m | grep -oiE '^json$' \
-#    && php -m | grep -oiE '^ldap$' \
-#    && php -m | grep -oiE '^mbstring$' \
-#    && php -m | grep -oiE '^mysqlnd$' \
-#    && php -m | grep -oiE '^mysqli$' \
-#    && php -m | grep -oiE '^pspell$' \
-#    && php -m | grep -oiE '^shmop$' \
-#    && php -m | grep -oiE '^simplexml$' \
-#    && php -m | grep -oiE '^sockets$' \
-#    && php -m | grep -oiE '^sodium$' \
-#    && php -m | grep -oiE '^tokenizer$' \
-#    && php -m | grep -oiE '^xml$' \
-#    && php -m | grep -oiE '^xmlreader$' \
-#    && php -m | grep -oiE '^xmlwriter$' \
-#    && php -m | grep -oiE '^mcrypt$' \
-#    && php -m | grep -oiE '^zip$' \
-##    && php -m | grep -oiE '^geoip$' \
-#    && php -m | grep -oiE '^memcache$' \
-#    && php -m | grep -oiE '^rrd$' \
-#    && php -m | grep -oiE '^imap$' \
-#    && php -m | grep -oiE '^xlswriter$' \
-#    \
-#    && pear list | grep -oiE '^DB\s' \
-#    \
-#    && true
+RUN set -eux \
+	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.2' \
+    \
+    && php -m | grep -oiE '^Zend OPcache$' \
+    && php -m | grep -oiE '^bz2$' \
+    && php -m | grep -oiE '^calendar$' \
+    && php -m | grep -oiE '^ctype$' \
+    && php -m | grep -oiE '^curl$' \
+    && php -m | grep -oiE '^dom$' \
+    && php -m | grep -oiE '^exif$' \
+    && php -m | grep -oiE '^fileinfo$' \
+    && php -m | grep -oiE '^ftp$' \
+    && php -m | grep -oiE '^gd$' \
+    && php -m | grep -oiE '^gettext$' \
+    && php -m | grep -oiE '^iconv$' \
+    && php -m | grep -oiE '^json$' \
+    && php -m | grep -oiE '^ldap$' \
+    && php -m | grep -oiE '^mbstring$' \
+    && php -m | grep -oiE '^mysqlnd$' \
+    && php -m | grep -oiE '^mysqli$' \
+    && php -m | grep -oiE '^pspell$' \
+    && php -m | grep -oiE '^shmop$' \
+    && php -m | grep -oiE '^simplexml$' \
+    && php -m | grep -oiE '^sockets$' \
+    && php -m | grep -oiE '^sodium$' \
+    && php -m | grep -oiE '^tokenizer$' \
+    && php -m | grep -oiE '^xml$' \
+    && php -m | grep -oiE '^xmlreader$' \
+    && php -m | grep -oiE '^xmlwriter$' \
+    && php -m | grep -oiE '^mcrypt$' \
+    && php -m | grep -oiE '^zip$' \
+#    && php -m | grep -oiE '^geoip$' \
+    && php -m | grep -oiE '^memcache$' \
+    && php -m | grep -oiE '^rrd$' \
+    && php -m | grep -oiE '^imap$' \
+    && php -m | grep -oiE '^xlswriter$' \
+    \
+    && pear list | grep -oiE '^DB\s' \
+    \
+    && true
 
 COPY conf/msmtprc /etc/msmtprc
 

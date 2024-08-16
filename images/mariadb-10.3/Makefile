@@ -1,4 +1,5 @@
 build:
+	docker pull mariadb:10.3
 	docker build --rm -t msav/bitrix-mariadb:10.3 .
 
 push: build

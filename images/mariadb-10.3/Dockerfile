@@ -1,9 +1,9 @@
-FROM mariadb:10.3
+FROM mariadb:10.6
 
 LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
 ARG SITE_TIMEZONE="Europe/Moscow"
-ENV SITE_TIMEZONE ${SITE_TIMEZONE}
+ENV SITE_TIMEZONE=${SITE_TIMEZONE}
 
 RUN apt-get update \
     && apt-get -y --no-install-recommends install \

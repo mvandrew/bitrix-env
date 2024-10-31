@@ -12,6 +12,21 @@ SERVER_NAME=${SERVER_NAME:-mydomain.ru}
 SERVER_IP=${SERVER_IP:-127.0.0.1}
 PROXY_IPS=${PROXY_IPS:-"127.0.0.1 127.0.0.2"}
 
+# Пути для проверки и установки Битрикс
+SESSION_PATH="/var/www/html"
+BITRIX_PATH="${SESSION_PATH}"
+BITRIX_INDEX="${BITRIX_PATH}/index.php"
+BITRIX_INFO="${BITRIX_PATH}/info.php"
+BITRIX_SETUP="${BITRIX_PATH}/bitrixsetup.php"
+
+# Функция для проверки и загрузки установщика Битрикс
+setup_bitrix_installer() {
+    if [ ! -f "$BITRIX_INDEX" ] && [ ! -f "$BITRIX_SETUP" ]; then
+        wget https://www.1c-bitrix.ru/download/scripts/bitrixsetup.php -O "$BITRIX_SETUP"
+        echo "<?php phpinfo(); ?>" > "$BITRIX_INFO"
+    fi
+}
+
 # Обновляем UID и GID пользователя
 usermod -u "$UID" www-data
 groupmod -g "$GID" www-data
@@ -59,6 +74,9 @@ account default : $SMTP_ACCOUNT
 EOF
 chmod 600 /etc/msmtprc
 chown www-data:www-data /etc/msmtprc
+
+# Выполнение функции для загрузки установщика Битрикс
+setup_bitrix_installer
 
 # Запуск Apache
 exec "$@"

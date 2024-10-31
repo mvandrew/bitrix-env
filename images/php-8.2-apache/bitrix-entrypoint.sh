@@ -42,5 +42,23 @@ cat <<EOF > /etc/apache2/conf-available/rpaf.conf
 EOF
 a2enconf rpaf
 
+# Настройка msmtp
+cat <<EOF > /etc/msmtprc
+account $SMTP_ACCOUNT
+host $SMTP_HOST
+port $SMTP_PORT
+from $SMTP_FROM
+auth $SMTP_AUTH
+user $SMTP_USER
+password $SMTP_PASSWORD
+tls $SMTP_TLS
+tls_starttls $SMTP_TLS
+timeout 5
+
+account default : $SMTP_ACCOUNT
+EOF
+chmod 600 /etc/msmtprc
+chown www-data:www-data /etc/msmtprc
+
 # Запуск Apache
 exec "$@"

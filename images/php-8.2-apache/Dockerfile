@@ -105,6 +105,8 @@ RUN mkdir /var/www/session \
     && mkdir /var/www/common \
     && chown -R www-data:www-data /var/www
 
+VOLUME ["/var/www/html", "/var/www/session", "/var/log/apache2"]
+
 # Установка рабочего каталога
 WORKDIR /var/www/html
 

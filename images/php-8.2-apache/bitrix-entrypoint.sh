@@ -1,49 +1,46 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
-usermod -u "${USER_ID}" www-data
-groupmod -g "${GROUP_ID}" www-data
+# Установка значений по умолчанию
+PHP_INI_TYPE=${PHP_INI_TYPE:-development}
+MBSTRING_FUNC_OVERLOAD=${MBSTRING_FUNC_OVERLOAD:-2}
+PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-64M}
+TZ=${TZ:-Europe/Moscow}
+UID=${UID:-1000}
+GID=${GID:-1000}
+SERVER_NAME=${SERVER_NAME:-mydomain.ru}
+SERVER_IP=${SERVER_IP:-127.0.0.1}
+PROXY_IPS=${PROXY_IPS:-"127.0.0.1 127.0.0.2"}
 
-# Добавление адреса сайта в файл hosts
-echo "${SITE_IP} ${SITE_DOMAIN}" >> /etc/hosts
+# Обновляем UID и GID пользователя
+usermod -u "$UID" www-data
+groupmod -g "$GID" www-data
 
-# Установка IP адресов прокси сервера в модуле rpaf
-sed -i "s/RPAFproxy_ips.*/RPAFproxy_ips ${PROXY_IPS}/" /etc/apache2/mods-available/rpaf.conf
+# Настройка временной зоны
+ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime
+echo "$TZ" > /etc/timezone
 
-# Расширение конфигурации PHP
-echo "[php]" > "${PHP_CONFIG_FILE_EX}" \
-    && echo "memory_limit = ${MEMORY_LIMIT}" >> "${PHP_CONFIG_FILE_EX}" \
-    && echo "mbstring.func_overload = ${MBSTRING_FUNC_OVERLOAD}" >> "${PHP_CONFIG_FILE_EX}"
+# Конфигурация PHP
+cp "/usr/local/etc/php/php.ini-$PHP_INI_TYPE" "/usr/local/etc/php/php.ini"
+sed -i "s/^memory_limit.*/memory_limit = $PHP_MEMORY_LIMIT/" /usr/local/etc/php/php.ini
+sed -i "s/^mbstring.func_overload.*/mbstring.func_overload = $MBSTRING_FUNC_OVERLOAD/" /usr/local/etc/php/php.ini
+sed -i "s|;date.timezone =|date.timezone = \"$TZ\"|" /usr/local/etc/php/php.ini
 
-# Проверка необходимости залить установщик Битрикс
-SESSION_PATH="/var/www/html"
-BITRIX_PATH="/var/www/html"
-BITRIX_INDEX="${BITRIX_PATH}/index.php"
-BITRIX_INFO="${BITRIX_PATH}/info.php"
-BITRIX_SETUP="${BITRIX_PATH}/bitrixsetup.php"
-if [ ! -f $BITRIX_INDEX ] && [ ! -f $BITRIX_SETUP ]; then
-    wget https://www.1c-bitrix.ru/download/scripts/bitrixsetup.php -O $BITRIX_SETUP
-    echo "<?php phpinfo(); ?>" > $BITRIX_INFO
-fi
+# Настройка Apache
+echo "ServerName $SERVER_NAME" >> /etc/apache2/apache2.conf
 
-# Контроль запуска модуля opcache
-echo "[opcache]" >> "${PHP_CONFIG_FILE_EX}" \
-    && echo "opcache.enable = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}" \
-    && echo "opcache.enable_cli = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}"
+# Обновление /etc/hosts
+echo "$SERVER_IP $SERVER_NAME" >> /etc/hosts
 
-# Активация ssl виртуального хоста
-if [ "$ENABLE_SSL" = 1 ]; then
-  a2ensite bitrix-ssl.conf
-fi
+# Настройка RPAF для поддержки Proxy IPs
+cat <<EOF > /etc/apache2/conf-available/rpaf.conf
+<IfModule mod_rpaf.c>
+    RPAFenable On
+    RPAFsethostname On
+    RPAFproxy_ips $PROXY_IPS
+</IfModule>
+EOF
+a2enconf rpaf
 
-# Параметры доступа к почтовому серверу
-sed -i "s/#SMTP_HOST#/${SMTP_HOST}/" /etc/msmtprc \
-  && sed -i "s/#SMTP_PORT#/${SMTP_PORT}/" /etc/msmtprc \
-  && sed -i "s/#SMTP_EMAIL#/${SMTP_EMAIL}/" /etc/msmtprc \
-  && sed -i "s/#SMTP_PASSWORD#/${SMTP_PASSWORD}/" /etc/msmtprc
-
-# Обновление прав доступа к файлам
-chown -R www-data:www-data $BITRIX_PATH
-chmod 775 $(find ${SESSION_PATH} -type d)
-chmod 664 $(find ${SESSION_PATH} -type f)
-
+# Запуск Apache
 exec "$@"

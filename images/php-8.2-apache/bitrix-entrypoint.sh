@@ -11,6 +11,8 @@ GID=${GID:-1000}
 SERVER_NAME=${SERVER_NAME:-mydomain.ru}
 SERVER_IP=${SERVER_IP:-127.0.0.1}
 PROXY_IPS=${PROXY_IPS:-"127.0.0.1 127.0.0.2"}
+ACCESS_LOG=${ACCESS_LOG:-/var/log/apache2/access.log}
+ERROR_LOG=${ERROR_LOG:-/var/log/apache2/error.log}
 
 # Пути для проверки и установки Битрикс
 SESSION_PATH="/var/www/html"
@@ -25,6 +27,13 @@ setup_bitrix_installer() {
         wget https://www.1c-bitrix.ru/download/scripts/bitrixsetup.php -O "$BITRIX_SETUP"
         echo "<?php phpinfo(); ?>" > "$BITRIX_INFO"
     fi
+}
+
+# Функция для проверки и создания логов, если они отсутствуют
+setup_logs() {
+    [ ! -f "$ACCESS_LOG" ] && touch "$ACCESS_LOG"
+    [ ! -f "$ERROR_LOG" ] && touch "$ERROR_LOG"
+    chown www-data:www-data "$ACCESS_LOG" "$ERROR_LOG"
 }
 
 # Обновляем UID и GID пользователя
@@ -74,6 +83,9 @@ account default : $SMTP_ACCOUNT
 EOF
 chmod 600 /etc/msmtprc
 chown www-data:www-data /etc/msmtprc
+
+# Настройка логов
+setup_logs
 
 # Выполнение функции для загрузки установщика Битрикс
 setup_bitrix_installer

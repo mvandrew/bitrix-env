@@ -15,6 +15,8 @@ ENV GID=1000
 ENV SERVER_NAME=mydomain.ru
 ENV SERVER_IP=127.0.0.1
 ENV PROXY_IPS="127.0.0.1 127.0.0.2"
+ENV ACCESS_LOG=/var/log/apache2/access.log
+ENV ERROR_LOG=/var/log/apache2/error.log
 
 # Переменные окружения для msmtp
 ENV SMTP_ACCOUNT=docker
@@ -65,6 +67,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pecl install apcu && docker-php-ext-enable apcu \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Настройка Apache для работы с логами
+RUN mkdir -p /var/log/apache2 && \
+    touch $ACCESS_LOG $ERROR_LOG && \
+    chown -R www-data:www-data /var/log/apache2
+
 # Генерация самоподписного SSL-сертификата
 RUN mkdir -p /etc/ssl/private && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -92,6 +99,11 @@ RUN chmod +x /usr/local/bin/bitrix-entrypoint.sh
 
 # Обеспечение корректной работы директив `.htaccess`
 RUN a2enmod rewrite
+
+# Добавление служебных каталогов
+RUN mkdir /var/www/session \
+    && mkdir /var/www/common \
+    && chown -R www-data:www-data /var/www
 
 # Установка рабочего каталога
 WORKDIR /var/www/html

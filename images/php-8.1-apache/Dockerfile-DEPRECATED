@@ -2,7 +2,7 @@ FROM php:8.1-apache
 
 LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
-ARG DEBIAN_FRONTEND=noninteractive
+#ARG DEBIAN_FRONTEND=noninteractive
 
 ARG BX_TIMEZONE="Europe/Moscow"
 ENV BX_TIMEZONE ${BX_TIMEZONE}
@@ -116,7 +116,49 @@ RUN set -eux \
         xz-utils \
 # Mail \
         msmtp \
+#    && docker-php-ext-configure gd --with-webp --with-jpeg --with-xpm --with-freetype \
+#    && docker-php-ext-configure opcache --enable-opcache \
+#    && docker-php-ext-install -j$(nproc) ctype \
+#      curl \
+#      dom \
+#      exif \
+#      fileinfo \
+#      ftp \
+#      gettext \
+#      json \
+#      ldap \
+#      mysqlnd \
+#      bz2 \
+#      bcmath \
+#      calendar \
+#      gd \
+#      pdo \
+#      pdo_mysql \
+#      iconv \
+#      mbstring \
+#      intl \
+#      tidy \
+#      xmlrpc \
+#      xsl \
+#      sockets \
+#      xml \
+#      soap \
+#      opcache \
     && pecl channel-update pecl.php.net \
+#    && pecl install mcrypt memcache memcached imagick zip redis oauth \
+#    && docker-php-ext-enable exif \
+#      ftp \
+#      gettext \
+#      json \
+#      ldap \
+#      mysqlnd \
+#      mcrypt \
+#      memcached \
+#      imagick \
+#      zip \
+#      redis \
+#      oauth \
+#      opcache \
     && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* \
     && true
 
@@ -280,11 +322,11 @@ RUN set -eux \
 	&& true
 
 # -------------------- Installing PHP Extension: opcache --------------------
-RUN set -eux \
-	# Installation: Generic
-	# Type:         Built-in extension
-	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) opcache \
-	&& true
+#RUN set -eux \
+#	# Installation: Generic
+#	# Type:         Built-in extension
+#	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) opcache \
+#	&& true
 
 # -------------------- Installing PHP Extension: lz4 --------------------
 RUN set -eux \
@@ -493,7 +535,7 @@ WORKDIR /var/www/html
 RUN set -eux \
 	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.1' \
     \
-    && php -m | grep -oiE '^Zend OPcache$' \
+#    && php -m | grep -oiE '^Zend OPcache$' \
     && php -m | grep -oiE '^bz2$' \
     && php -m | grep -oiE '^calendar$' \
     && php -m | grep -oiE '^ctype$' \
@@ -532,13 +574,6 @@ RUN set -eux \
     && true
 
 COPY conf/msmtprc /etc/msmtprc
-
-# Дополнительная конфигурация Битрикс окружения
-RUN mkdir "/etc/apache2/conf-bx" \
-    && chown root:root -R "/etc/apache2/conf-bx" \
-    && chmod 755 -R "/etc/apache2/conf-bx" \
-    && echo "IncludeOptional conf-bx/*.conf" >> "/etc/apache2/apache2.conf"
-COPY conf/apache2/conf-bx/* /etc/apache2/conf-bx
 
 COPY bitrix-entrypoint.sh /usr/local/bin
 ENTRYPOINT [ "bitrix-entrypoint.sh" ]

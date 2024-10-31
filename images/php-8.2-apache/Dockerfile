@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 LABEL ru.msav.image.authors="Andrey Mishchenko <info@msav.ru>"
 
@@ -159,8 +159,10 @@ RUN set -eux \
 	# Type:         Built-in extension
 	# Custom:       configure command
 	&& docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype \
+    && docker-php-ext-configure ftp --with-openssl-dir=/usr \
 	# Installation
 	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) gd \
+    && docker-php-ext-install ftp \
 	&& true
 
 # -------------------- Installing PHP Extension: imagick --------------------
@@ -491,7 +493,7 @@ WORKDIR /var/www/html
 ## Проверка
 ##
 RUN set -eux \
-	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.1' \
+	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.2' \
     \
     && php -m | grep -oiE '^Zend OPcache$' \
     && php -m | grep -oiE '^bz2$' \

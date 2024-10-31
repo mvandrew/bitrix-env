@@ -2,7 +2,7 @@ pull:
 	docker pull php:8.2-apache
 
 build: pull
-	docker build --rm -t msav/bitrix-php-apache:8.2 .
+	docker build --rm -t msav/bitrix-php-apache:8.2 -t msav/bitrix-php-apache:latest .
 
 rebuild: pull
 	docker build --no-cache --rm -t msav/bitrix-php-apache:8.2 .

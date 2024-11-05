@@ -8,12 +8,12 @@ LABEL maintainer="Andrey Mishchenko <msav@msav.ru>"
 ARG PHP_INI_TYPE_ARG=development
 ENV PHP_INI_TYPE=${PHP_INI_TYPE_ARG}
 ENV MBSTRING_FUNC_OVERLOAD=2
-ENV PHP_MEMORY_LIMIT=64M
+ENV MEMORY_LIMIT=64M
 ENV TZ=Europe/Moscow
-ENV UID=1000
-ENV GID=1000
-ENV SERVER_NAME=mydomain.ru
-ENV SERVER_IP=127.0.0.1
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+ENV SITE_DOMAIN=mydomain.ru
+ENV SITE_IP=127.0.0.1
 ENV PROXY_IPS="127.0.0.1 127.0.0.2"
 ENV ACCESS_LOG=/var/log/apache2/access.log
 ENV ERROR_LOG=/var/log/apache2/error.log
@@ -25,7 +25,7 @@ ENV SMTP_PORT=587
 ENV SMTP_USER=smtp_user
 ENV SMTP_PASSWORD=smtp_password
 ENV SMTP_TLS=on
-ENV SMTP_FROM=from@example.com
+ENV SMTP_EMAIL=from@example.com
 ENV SMTP_AUTH=on
 
 # Установка необходимых пакетов, российских сертификатов и PHP-расширений
@@ -77,7 +77,7 @@ RUN mkdir -p /etc/ssl/private && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/ssl/private/server.key \
     -out /etc/ssl/certs/server.crt \
-    -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/OU=IT/CN=${SERVER_NAME}"
+    -subj "/C=RU/ST=Moscow/L=Moscow/O=MyCompany/OU=IT/CN=${SITE_DOMAIN}"
 
 # Настройка Apache для SSL
 RUN a2enmod ssl && \

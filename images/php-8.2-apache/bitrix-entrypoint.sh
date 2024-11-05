@@ -4,12 +4,12 @@ set -e
 # Установка значений по умолчанию
 PHP_INI_TYPE=${PHP_INI_TYPE:-development}
 MBSTRING_FUNC_OVERLOAD=${MBSTRING_FUNC_OVERLOAD:-2}
-PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-64M}
+MEMORY_LIMIT=${MEMORY_LIMIT:-64M}
 TZ=${TZ:-Europe/Moscow}
-UID=${UID:-1000}
-GID=${GID:-1000}
-SERVER_NAME=${SERVER_NAME:-mydomain.ru}
-SERVER_IP=${SERVER_IP:-127.0.0.1}
+USER_ID=${USER_ID:-1000}
+GROUP_ID=${GROUP_ID:-1000}
+SITE_DOMAIN=${SITE_DOMAIN:-mydomain.ru}
+SITE_IP=${SITE_IP:-127.0.0.1}
 PROXY_IPS=${PROXY_IPS:-"127.0.0.1 127.0.0.2"}
 ACCESS_LOG=${ACCESS_LOG:-/var/log/apache2/access.log}
 ERROR_LOG=${ERROR_LOG:-/var/log/apache2/error.log}
@@ -36,9 +36,9 @@ setup_logs() {
     chown www-data:www-data "$ACCESS_LOG" "$ERROR_LOG"
 }
 
-# Обновляем UID и GID пользователя
-usermod -u "$UID" www-data
-groupmod -g "$GID" www-data
+# Обновляем USER_ID и GROUP_ID пользователя
+usermod -u "$USER_ID" www-data
+groupmod -g "$GROUP_ID" www-data
 
 # Настройка временной зоны
 ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime
@@ -46,15 +46,15 @@ echo "$TZ" > /etc/timezone
 
 # Конфигурация PHP
 cp "/usr/local/etc/php/php.ini-$PHP_INI_TYPE" "/usr/local/etc/php/php.ini"
-sed -i "s/^memory_limit.*/memory_limit = $PHP_MEMORY_LIMIT/" /usr/local/etc/php/php.ini
+sed -i "s/^memory_limit.*/memory_limit = $MEMORY_LIMIT/" /usr/local/etc/php/php.ini
 sed -i "s/^mbstring.func_overload.*/mbstring.func_overload = $MBSTRING_FUNC_OVERLOAD/" /usr/local/etc/php/php.ini
 sed -i "s|;date.timezone =|date.timezone = \"$TZ\"|" /usr/local/etc/php/php.ini
 
 # Настройка Apache
-echo "ServerName $SERVER_NAME" >> /etc/apache2/apache2.conf
+echo "ServerName $SITE_DOMAIN" >> /etc/apache2/apache2.conf
 
 # Обновление /etc/hosts
-echo "$SERVER_IP $SERVER_NAME" >> /etc/hosts
+echo "$SITE_IP $SITE_DOMAIN" >> /etc/hosts
 
 # Настройка RPAF для поддержки Proxy IPs
 cat <<EOF > /etc/apache2/conf-available/rpaf.conf
@@ -71,7 +71,7 @@ cat <<EOF > /etc/msmtprc
 account $SMTP_ACCOUNT
 host $SMTP_HOST
 port $SMTP_PORT
-from $SMTP_FROM
+from $SMTP_EMAIL
 auth $SMTP_AUTH
 user $SMTP_USER
 password $SMTP_PASSWORD

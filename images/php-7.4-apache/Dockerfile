@@ -488,7 +488,7 @@ RUN set -eux \
 	&& pecl install xlswriter \
 	# Enabling
 	&& docker-php-ext-enable xlswriter \
-	&& true \
+	&& true
 
 # Add russian trusted certs
 RUN mkdir "/usr/local/share/ca-certificates/extra"

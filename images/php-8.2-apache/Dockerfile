@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2-dev \
     libzip-dev \
     libonig-dev \
+    libldap2-dev \
     ca-certificates \
     openssl \
     wget \
@@ -49,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && wget -q -O /usr/local/share/ca-certificates/russian_trusted_sub_ca_pem.crt https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt \
     && update-ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
     && docker-php-ext-install -j$(nproc) \
     gd \
     mysqli \
@@ -63,6 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fileinfo \
     ftp \
     iconv \
+    ldap \
     zip \
     && pecl install apcu && docker-php-ext-enable apcu \
     && apt-get clean && rm -rf /var/lib/apt/lists/*

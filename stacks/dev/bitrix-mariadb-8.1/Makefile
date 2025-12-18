@@ -25,7 +25,7 @@ DB_CONTAINER = $(PROJECT)_db
 # Timestamp for backups
 TIMESTAMP = $(shell date +%Y%m%d_%H%M%S)
 
-.PHONY: help up up-tools down restart logs status \
+.PHONY: help up up-tools down restart logs logs-web status \
         php composer shell \
         dump restore \
         init clean update-web
@@ -44,7 +44,8 @@ help:
 	@echo "  make up-tools    - Start all containers (with Adminer & phpMyAdmin)"
 	@echo "  make down        - Stop all containers"
 	@echo "  make restart     - Restart all containers"
-	@echo "  make logs        - View container logs"
+	@echo "  make logs        - View all container logs"
+	@echo "  make logs-web    - View web container logs (real-time)"
 	@echo "  make status      - Show container status"
 	@echo "  make update-web  - Update web container from latest image"
 	@echo ""
@@ -104,6 +105,9 @@ update-web: init
 
 logs:
 	docker compose logs -f
+
+logs-web:
+	docker compose logs -f web
 
 status:
 	@echo "Container status:"

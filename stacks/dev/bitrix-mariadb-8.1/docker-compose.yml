@@ -116,8 +116,6 @@ services:
       - "${MAILPIT_WEB_PORT:-8025}:8025"
     networks:
       - bitrix
-    profiles:
-      - tools
 
 networks:
   bitrix:

@@ -112,6 +112,15 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}:${{ env.TAG }}
           echo "Push completed successfully"
 
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE_NAME }}
+          readme-filepath: images/php-apache/README.md
+          short-description: "PHP Apache Docker images optimized for 1C-Bitrix CMS and Bitrix24"
+
       - name: Image info
         run: |
           echo ""

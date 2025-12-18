@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  web:
+    image: msav/bitrix-php-apache:8.1
+    container_name: ${PROJECT:-bitrix}_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_HTTP_PORT:-8080}:80"
+      - "${WEB_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ${DATA_PATH:-./data}/www:/var/www/html:cached
+      - ${DATA_PATH:-./data}/upload:/var/www/html/upload
+      - ${DATA_PATH:-./data}/logs/php:/var/log/php
+      - ${DATA_PATH:-./data}/sessions:/var/www/session
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN:-localhost}
+      - MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
+      - PHP_INI_TYPE=${PHP_INI_TYPE:-development}
+      - MBSTRING_FUNC_OVERLOAD=${MBSTRING_FUNC_OVERLOAD:-0}
+      - TZ=${TZ:-Europe/Moscow}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bitrix
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  db:
+    image: msav/bitrix-mariadb:10.11
+    container_name: ${PROJECT:-bitrix}_db
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - ${DATA_PATH:-./data}/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-bitrix}
+      - MYSQL_USER=${MYSQL_USER:-bitrix}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-bitrixpwd}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpwd}
+      - TZ=${TZ:-Europe/Moscow}
+    networks:
+      - bitrix
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpwd}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  adminer:
+    image: adminer:latest
+    container_name: ${PROJECT:-bitrix}_adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+      - UPLOAD=1024M
+    depends_on:
+      - db
+    networks:
+      - bitrix
+    profiles:
+      - tools
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ${PROJECT:-bitrix}_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PHPMYADMIN_PORT:-8082}:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=${MYSQL_USER:-bitrix}
+      - PMA_PASSWORD=${MYSQL_PASSWORD:-bitrixpwd}
+      - UPLOAD_LIMIT=1024M
+    depends_on:
+      - db
+    networks:
+      - bitrix
+    profiles:
+      - tools
+
+networks:
+  bitrix:
+    driver: bridge

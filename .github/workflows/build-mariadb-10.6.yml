@@ -17,7 +17,7 @@ on:
       skip_tests:
         description: 'Skip tests before push'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
   # Automatic trigger on push to master branch

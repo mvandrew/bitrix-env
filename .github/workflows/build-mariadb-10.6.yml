@@ -1,0 +1,123 @@
+# GitHub Actions workflow for building and pushing MariaDB 10.6 Docker image
+# Repository: github.com/mvandrew/bitrix-env
+#
+# This workflow builds the MariaDB 10.6 image optimized for 1C-Bitrix
+# and pushes it to Docker Hub as msav/bitrix-mariadb:10.6
+#
+# Required secrets:
+#   - DOCKERHUB_USERNAME: Docker Hub username
+#   - DOCKERHUB_TOKEN: Docker Hub access token
+
+name: Build and Push MariaDB 10.6
+
+on:
+  # Manual trigger via GitHub UI or API
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests before push'
+        required: false
+        default: 'false'
+        type: boolean
+
+  # Automatic trigger on push to main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/mariadb/10.6/**'
+      - 'images/mariadb/base/**'
+
+env:
+  IMAGE_NAME: msav/bitrix-mariadb
+  TAG: "10.6"
+  TEST_CONTAINER_NAME: mariadb-10.6-test
+
+jobs:
+  build-test-push:
+    name: Build, Test and Push MariaDB 10.6
+    runs-on: self-hosted
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        working-directory: images/mariadb
+        run: |
+          echo "Building ${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
+          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 10.6/Dockerfile .
+          echo "Build completed successfully"
+
+      - name: Test MariaDB image
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        run: |
+          echo "=== Testing MariaDB 10.6 image ==="
+          echo ""
+
+          echo "1. Starting test container..."
+          docker run --rm -d --name ${{ env.TEST_CONTAINER_NAME }} \
+            -e MYSQL_ROOT_PASSWORD=testpwd \
+            -e MYSQL_DATABASE=bitrix_test \
+            ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+          echo "   Waiting for MariaDB to initialize (45s)..."
+          sleep 45
+
+          echo ""
+          echo "2. Checking MariaDB version:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SELECT VERSION();" 2>/dev/null
+
+          echo ""
+          echo "3. Checking sql_mode (must be empty for Bitrix):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'sql_mode';" 2>/dev/null
+
+          echo ""
+          echo "4. Checking character_set_server (must be utf8mb4):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'character_set_server';" 2>/dev/null
+
+          echo ""
+          echo "5. Checking collation_server:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'collation_server';" 2>/dev/null
+
+          echo ""
+          echo "6. Checking transaction_isolation (must be READ-COMMITTED):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'transaction_isolation';" 2>/dev/null
+
+          echo ""
+          echo "7. Checking innodb_buffer_pool_size:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mysql -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'innodb_buffer_pool_size';" 2>/dev/null
+
+          echo ""
+          echo "Stopping test container..."
+          docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
+
+          echo ""
+          echo "=== Tests completed successfully ==="
+
+      - name: Cleanup test container on failure
+        if: failure()
+        run: |
+          docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
+          docker rm ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
+
+      - name: Push to Docker Hub
+        run: |
+          echo "Pushing ${{ env.IMAGE_NAME }}:${{ env.TAG }} to Docker Hub..."
+          docker push ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          echo "Push completed successfully"
+
+      - name: Image info
+        run: |
+          echo ""
+          echo "=== Image Published ==="
+          echo "Image: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          echo "Pull command: docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          echo ""

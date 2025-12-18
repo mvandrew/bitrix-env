@@ -1,0 +1,67 @@
+# MariaDB configuration for 1C-Bitrix (Development)
+# Optimized for local development with moderate resource usage
+# Override settings by placing .cnf files in /etc/mysql/bitrix.d/
+
+[mysqld]
+# === Bitrix compatibility (MANDATORY) ===
+sql_mode = ""
+transaction-isolation = READ-COMMITTED
+max_allowed_packet = 256M
+innodb_strict_mode = OFF
+explicit_defaults_for_timestamp = 1
+
+# === Character set (UTF8MB4 for full Unicode support) ===
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+init-connect = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+# === Storage engine ===
+default-storage-engine = innodb
+
+# === InnoDB (Development - moderate resources) ===
+innodb_buffer_pool_size = 512M
+innodb_log_file_size = 128M
+innodb_log_buffer_size = 64M
+innodb_buffer_pool_instances = 2
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+innodb_file_per_table = 1
+innodb_write_io_threads = 4
+innodb_read_io_threads = 4
+
+# === Performance (Development) ===
+table_open_cache = 2048
+thread_cache_size = 16
+thread_stack = 512K
+sort_buffer_size = 1M
+join_buffer_size = 1M
+key_buffer_size = 0
+
+# === Temporary tables ===
+max_heap_table_size = 32M
+tmp_table_size = 32M
+
+# === Logging (Development - enabled for debugging) ===
+slow_query_log = 1
+long_query_time = 2
+log_queries_not_using_indexes = 0
+
+# === Binary log (minimal for development) ===
+expire_logs_days = 3
+max_binlog_size = 100M
+
+# === Network ===
+skip-name-resolve
+skip-external-locking
+
+# === MyISAM (legacy support) ===
+myisam-recover-options = BACKUP
+
+# === Custom configs ===
+!includedir /etc/mysql/bitrix.d/
+
+[client]
+default-character-set = utf8mb4
+
+[mysql]
+default-character-set = utf8mb4

@@ -29,7 +29,9 @@ rebuild: pull
 	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 10.11/Dockerfile .
 
 push: build
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):latest
 	docker push $(IMAGE_NAME):$(TAG)
+	docker push $(IMAGE_NAME):latest
 
 run: build
 	docker run -d --name $(CONTAINER_NAME) \

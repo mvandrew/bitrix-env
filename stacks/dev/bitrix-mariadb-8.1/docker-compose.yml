@@ -5,6 +5,9 @@ services:
     image: msav/bitrix-php-apache:8.1
     container_name: ${PROJECT:-bitrix}_web
     restart: unless-stopped
+    extra_hosts:
+      - "${SITE_DOMAIN:-localhost}:127.0.0.1"
+      - "host.docker.internal:host-gateway"
     ports:
       - "${WEB_HTTP_PORT:-8080}:80"
       - "${WEB_HTTPS_PORT:-8443}:443"

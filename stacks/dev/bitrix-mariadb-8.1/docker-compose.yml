@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     image: msav/bitrix-php-apache:8.1
@@ -33,6 +31,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # Port forwarder: позволяет localhost:8080 внутри контейнера работать
+  # Решает проблему Bitrix site_checker "check_socket" ошибки
+  socat:
+    image: alpine/socat
+    container_name: ${PROJECT:-bitrix}_socat
+    network_mode: "service:web"
+    command: TCP-LISTEN:8080,fork,reuseaddr TCP:localhost:80
+    depends_on:
+      - web
+    restart: unless-stopped
 
   db:
     image: msav/bitrix-mariadb:10.11

@@ -27,6 +27,7 @@ push: build
 # Run container
 run: build
 	docker run -p 8080:80 --name $(CONTAINER_NAME) --rm -d \
+		-e PHP_INI_TYPE=production \
 		-v ./data/www:/var/www/html \
 		-v ./data/logs:/var/log/php \
 		$(IMAGE_NAME):$(TAG)
@@ -42,7 +43,9 @@ stop:
 
 # Clean up
 clean: stop
-	docker rmi $(IMAGE_NAME):$(TAG) || true
+	docker ps -aq --filter ancestor=$(IMAGE_NAME):$(TAG) | xargs -r docker rm -f 2>/dev/null || true
+	docker rmi -f $(IMAGE_NAME):$(TAG) 2>/dev/null || true
+	rm -rf ./data
 
 # Test extensions
 test: build

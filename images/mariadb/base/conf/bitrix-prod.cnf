@@ -1,0 +1,71 @@
+# MariaDB configuration for 1C-Bitrix (Production)
+# Optimized for production workloads with high performance
+# Override settings by placing .cnf files in /etc/mysql/bitrix.d/
+#
+# Recommended innodb_buffer_pool_size by host RAM:
+#   4GB  -> 2G  (instances: 2)
+#   8GB  -> 4G  (instances: 4)
+#   16GB -> 12G (instances: 12)
+
+[mysqld]
+# === Bitrix compatibility (MANDATORY) ===
+sql_mode = ""
+transaction-isolation = READ-COMMITTED
+max_allowed_packet = 256M
+innodb_strict_mode = OFF
+explicit_defaults_for_timestamp = 1
+
+# === Character set (UTF8MB4 for full Unicode support) ===
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+init-connect = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+# === Storage engine ===
+default-storage-engine = innodb
+
+# === InnoDB (Production - tune based on available RAM) ===
+innodb_buffer_pool_size = 4G
+innodb_log_file_size = 512M
+innodb_log_buffer_size = 256M
+innodb_buffer_pool_instances = 4
+innodb_flush_log_at_trx_commit = 1
+innodb_flush_method = O_DIRECT
+innodb_file_per_table = 1
+innodb_write_io_threads = 16
+innodb_read_io_threads = 16
+
+# === Performance (Production) ===
+table_open_cache = 4096
+thread_cache_size = 32
+thread_stack = 512K
+sort_buffer_size = 2M
+join_buffer_size = 64M
+key_buffer_size = 0
+
+# === Temporary tables ===
+max_heap_table_size = 64M
+tmp_table_size = 64M
+
+# === Logging (Production - minimal) ===
+slow_query_log = 0
+long_query_time = 2
+
+# === Binary log ===
+expire_logs_days = 10
+max_binlog_size = 100M
+
+# === Network ===
+skip-name-resolve
+skip-external-locking
+
+# === MyISAM (legacy support) ===
+myisam-recover-options = BACKUP
+
+# === Custom configs ===
+!includedir /etc/mysql/bitrix.d/
+
+[client]
+default-character-set = utf8mb4
+
+[mysql]
+default-character-set = utf8mb4

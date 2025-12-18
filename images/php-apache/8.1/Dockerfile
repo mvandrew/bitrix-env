@@ -291,8 +291,8 @@ RUN ln -snf /usr/share/zoneinfo/${BX_TIMEZONE} /etc/localtime \
 # PHP configuration
 COPY base/conf/php-dev.ini /usr/local/etc/php/conf.d/zzz-bitrix-php-dev.ini
 COPY base/conf/php-prod.ini /usr/local/etc/php/conf.d/zzz-bitrix-php-prod.ini
-COPY base/conf/opcache-dev.ini /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
-COPY base/conf/opcache-prod.ini /usr/local/etc/php/conf.d/zzz-opcache-prod.ini
+COPY base/conf/opcache-dev.ini /usr/local/share/bitrix/opcache-dev.ini
+COPY base/conf/opcache-prod.ini /usr/local/share/bitrix/opcache-prod.ini
 
 # Apache configuration
 COPY base/conf/apache/00-httpd.conf /etc/apache2/conf-available/00-bitrix-httpd.conf

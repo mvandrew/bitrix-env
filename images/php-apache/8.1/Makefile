@@ -35,7 +35,7 @@ run: build
 
 # Run with bash shell
 run-bash: build
-	docker run --rm -it $(IMAGE_NAME):$(TAG) /bin/bash
+	docker run -e PHP_INI_TYPE=production --rm -it $(IMAGE_NAME):$(TAG) /bin/bash
 
 # Stop container
 stop:

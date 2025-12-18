@@ -63,6 +63,15 @@ else
     cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini 2>/dev/null || true
 fi
 
+# 4b. Select OPcache configuration based on PHP_INI_TYPE
+if [ "${PHP_INI_TYPE}" = "production" ]; then
+    echo "Using production OPcache configuration"
+    cp /usr/local/share/bitrix/opcache-prod.ini ${PHP_CONFIG_DIR}/zzz-opcache.ini
+else
+    echo "Using development OPcache configuration"
+    cp /usr/local/share/bitrix/opcache-dev.ini ${PHP_CONFIG_DIR}/zzz-opcache.ini
+fi
+
 # 5. Create runtime PHP configuration
 echo "[php]" > "${PHP_CONFIG_FILE_EX}"
 echo "memory_limit = ${MEMORY_LIMIT}" >> "${PHP_CONFIG_FILE_EX}"

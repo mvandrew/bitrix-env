@@ -20,10 +20,10 @@ on:
         default: 'false'
         type: boolean
 
-  # Automatic trigger on push to main branch
+  # Automatic trigger on push to master branch
   push:
     branches:
-      - main
+      - master
     paths:
       - 'images/mariadb/10.6/**'
       - 'images/mariadb/base/**'

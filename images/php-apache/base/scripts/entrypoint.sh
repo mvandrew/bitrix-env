@@ -18,10 +18,13 @@ set -e
 : "${ENABLE_SSL:=0}"
 : "${BX_TIMEZONE:=Europe/Moscow}"
 : "${TZ:=$BX_TIMEZONE}"
-: "${SMTP_HOST:=mailhog}"
+: "${SMTP_HOST:=mailpit}"
 : "${SMTP_PORT:=1025}"
 : "${SMTP_EMAIL:=noreply@localhost}"
 : "${SMTP_PASSWORD:=}"
+: "${SMTP_AUTH:=off}"
+: "${SMTP_TLS:=off}"
+: "${SMTP_TLS_STARTTLS:=off}"
 
 # Paths
 PHP_CONFIG_DIR="/usr/local/etc/php/conf.d"
@@ -103,6 +106,9 @@ if [ -f /etc/msmtprc ]; then
     sed -i "s/#SMTP_PORT#/${SMTP_PORT}/" /etc/msmtprc
     sed -i "s/#SMTP_EMAIL#/${SMTP_EMAIL}/g" /etc/msmtprc
     sed -i "s/#SMTP_PASSWORD#/${SMTP_PASSWORD}/" /etc/msmtprc
+    sed -i "s/#SMTP_AUTH#/${SMTP_AUTH}/" /etc/msmtprc
+    sed -i "s/#SMTP_TLS#/${SMTP_TLS}/" /etc/msmtprc
+    sed -i "s/#SMTP_TLS_STARTTLS#/${SMTP_TLS_STARTTLS}/" /etc/msmtprc
 fi
 
 # 10. Set file permissions

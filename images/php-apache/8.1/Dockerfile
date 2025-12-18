@@ -184,10 +184,13 @@ ENV SITE_DOMAIN="mydomain.ru"
 ENV SITE_IP="127.0.0.1"
 ENV PROXY_IPS="127.0.0.1 127.0.0.2"
 ENV MBSTRING_FUNC_OVERLOAD="0"
-ENV SMTP_HOST="mailhog"
+ENV SMTP_HOST="mailpit"
 ENV SMTP_PORT="1025"
 ENV SMTP_EMAIL="noreply@localhost"
 ENV SMTP_PASSWORD=""
+ENV SMTP_AUTH="off"
+ENV SMTP_TLS="off"
+ENV SMTP_TLS_STARTTLS="off"
 
 # ===========================================
 # Install ONLY Runtime Dependencies

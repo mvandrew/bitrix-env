@@ -28,7 +28,7 @@ TIMESTAMP = $(shell date +%Y%m%d_%H%M%S)
 .PHONY: help up up-tools down restart logs status \
         php composer shell \
         dump restore \
-        init clean
+        init clean update-web
 
 # ===========================================
 # HELP
@@ -46,6 +46,7 @@ help:
 	@echo "  make restart     - Restart all containers"
 	@echo "  make logs        - View container logs"
 	@echo "  make status      - Show container status"
+	@echo "  make update-web  - Update web container from latest image"
 	@echo ""
 	@echo "PHP Commands:"
 	@echo "  make php CMD=\"-v\"           - Run PHP command"
@@ -90,6 +91,16 @@ down:
 	docker compose --profile tools down
 
 restart: down up
+
+update-web: init
+	@echo "Updating web container from latest image..."
+	@echo "Pulling latest image..."
+	docker compose pull web
+	@echo "Recreating container with new image..."
+	docker compose up -d --force-recreate --no-deps web
+	@echo ""
+	@echo "Web container updated!"
+	@echo "  Web: http://localhost:$${WEB_HTTP_PORT:-8080}"
 
 logs:
 	docker compose logs -f

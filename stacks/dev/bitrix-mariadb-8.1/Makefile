@@ -82,6 +82,7 @@ up-tools: init
 	@echo "  Web:        http://localhost:$${WEB_HTTP_PORT:-8080}"
 	@echo "  Adminer:    http://localhost:$${ADMINER_PORT:-8081}"
 	@echo "  phpMyAdmin: http://localhost:$${PHPMYADMIN_PORT:-8082}"
+	@echo "  Mailpit:    http://localhost:$${MAILPIT_WEB_PORT:-8025}"
 	@echo ""
 
 down:

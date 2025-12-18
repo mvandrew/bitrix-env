@@ -20,6 +20,10 @@ services:
       - PHP_INI_TYPE=${PHP_INI_TYPE:-development}
       - MBSTRING_FUNC_OVERLOAD=${MBSTRING_FUNC_OVERLOAD:-0}
       - TZ=${TZ:-Europe/Moscow}
+      - SMTP_HOST=${SMTP_HOST:-mailpit}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_EMAIL=${SMTP_EMAIL:-noreply@localhost}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
@@ -95,6 +99,18 @@ services:
       - UPLOAD_LIMIT=1024M
     depends_on:
       - db
+    networks:
+      - bitrix
+    profiles:
+      - tools
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ${PROJECT:-bitrix}_mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_WEB_PORT:-8025}:8025"
     networks:
       - bitrix
     profiles:

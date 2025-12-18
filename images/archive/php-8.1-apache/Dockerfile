@@ -52,8 +52,6 @@ ARG SMTP_AUTHENTICATION
 ARG SMTP_AUTHENTICATION_METHOD
 ARG SMTP_ENABLE_TLS
 
-# https://github.com/devilbox/docker-php-fpm/blob/master/Dockerfiles/mods/Dockerfile-7.4
-
 RUN set -eux \
     && DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \

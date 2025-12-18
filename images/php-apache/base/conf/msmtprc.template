@@ -1,0 +1,24 @@
+# ===========================================
+# msmtp Configuration Template
+# Bitrix Docker Environment
+# ===========================================
+# Placeholders are replaced by entrypoint.sh:
+# #SMTP_HOST#, #SMTP_PORT#, #SMTP_EMAIL#, #SMTP_PASSWORD#
+
+defaults
+logfile         /var/log/msmtp.log
+timeout         5
+
+account docker
+host            #SMTP_HOST#
+port            #SMTP_PORT#
+from            #SMTP_EMAIL#
+keepbcc         on
+auth            on
+user            #SMTP_EMAIL#
+password        #SMTP_PASSWORD#
+tls             on
+tls_starttls    on
+tls_certcheck   off
+
+account default: docker

@@ -38,7 +38,7 @@ services:
     image: alpine/socat
     container_name: ${PROJECT:-bitrix}_socat
     network_mode: "service:web"
-    command: TCP-LISTEN:8080,fork,reuseaddr TCP:localhost:80
+    command: TCP-LISTEN:${WEB_HTTP_PORT:-8080},fork,reuseaddr TCP:localhost:80
     depends_on:
       - web
     restart: unless-stopped

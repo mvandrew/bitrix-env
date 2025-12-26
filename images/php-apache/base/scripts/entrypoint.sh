@@ -25,6 +25,7 @@ set -e
 : "${SMTP_AUTH:=off}"
 : "${SMTP_TLS:=off}"
 : "${SMTP_TLS_STARTTLS:=off}"
+: "${CHOWN_MODE:=smart}"  # smart | sync | async | skip
 
 # Paths
 PHP_CONFIG_DIR="/usr/local/etc/php/conf.d"
@@ -112,13 +113,52 @@ if [ -f /etc/msmtprc ]; then
 fi
 
 # 10. Set file permissions
-echo "Setting file permissions..."
-chown -R www-data:www-data "${BITRIX_PATH}" 2>/dev/null || true
-chown -R www-data:www-data "${SESSION_PATH}" 2>/dev/null || true
+set_permissions() {
+    local log_file="/var/log/php/chown.log"
+    mkdir -p /var/log/php
+    chown www-data:www-data /var/log/php 2>/dev/null || true
 
-# Create log directories if not exist
-mkdir -p /var/log/php
-chown www-data:www-data /var/log/php
+    case "${CHOWN_MODE}" in
+        skip)
+            echo "Skipping file permissions (CHOWN_MODE=skip)"
+            ;;
+        sync)
+            echo "Setting file permissions (sync mode)..."
+            chown -R www-data:www-data "${BITRIX_PATH}" 2>/dev/null || true
+            chown -R www-data:www-data "${SESSION_PATH}" 2>/dev/null || true
+            ;;
+        async)
+            echo "Setting file permissions (async mode)..."
+            chown -R www-data:www-data "${SESSION_PATH}" 2>/dev/null || true
+            (
+                chown -R www-data:www-data "${BITRIX_PATH}" 2>/dev/null || true
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] chown completed" >> "${log_file}"
+            ) &
+            ;;
+        smart|*)
+            echo "Setting file permissions (smart mode)..."
+            # Sessions are critical for operation
+            chown -R www-data:www-data "${SESSION_PATH}" 2>/dev/null || true
+
+            # Critical Bitrix files - synchronously
+            if [ -d "${BITRIX_PATH}/bitrix" ]; then
+                chown www-data:www-data "${BITRIX_PATH}" 2>/dev/null || true
+                chown -R www-data:www-data "${BITRIX_PATH}/bitrix/php_interface" 2>/dev/null || true
+                chown www-data:www-data "${BITRIX_PATH}/bitrix/.settings.php" 2>/dev/null || true
+                chown www-data:www-data "${BITRIX_PATH}/bitrix/.settings_extra.php" 2>/dev/null || true
+            fi
+
+            # Everything else - in background after delay
+            (
+                sleep 3
+                find "${BITRIX_PATH}" -not -user www-data -exec chown www-data:www-data {} + 2>/dev/null || true
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Background chown completed" >> "${log_file}"
+            ) &
+            ;;
+    esac
+}
+
+set_permissions
 
 # Copy health check to web root
 if [ -f /usr/local/share/bitrix/health.php ]; then

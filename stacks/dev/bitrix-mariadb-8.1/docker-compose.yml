@@ -27,6 +27,7 @@ services:
       - SMTP_AUTH=${SMTP_AUTH:-off}
       - SMTP_TLS=${SMTP_TLS:-off}
       - SMTP_TLS_STARTTLS=${SMTP_TLS_STARTTLS:-off}
+      - ENABLE_SSL=${ENABLE_SSL:-1}
     depends_on:
       db:
         condition: service_healthy

@@ -1,5 +1,5 @@
 # ===========================================
-# Bitrix PHP 8.1 Apache Docker Image (Optimized)
+# Bitrix PHP 8.2 Apache Docker Image (Optimized)
 # ===========================================
 # Multi-stage build to reduce final image size
 # Build tools and -dev packages are only in builder stage
@@ -10,7 +10,7 @@
 # ===========================================
 # Stage 1: BUILDER - Compile all extensions
 # ===========================================
-FROM php:8.1-apache-bookworm AS builder
+FROM php:8.2-apache-bookworm AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -162,10 +162,10 @@ RUN pear install DB
 # ===========================================
 # Stage 2: RUNTIME - Final optimized image
 # ===========================================
-FROM php:8.1-apache-bookworm AS runtime
+FROM php:8.2-apache-bookworm AS runtime
 
 LABEL maintainer="Andrey Mishchenko <info@msav.ru>"
-LABEL description="PHP 8.1 Apache image optimized for 1C-Bitrix CMS (multi-stage build)"
+LABEL description="PHP 8.2 Apache image optimized for 1C-Bitrix CMS (multi-stage build)"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -332,7 +332,7 @@ RUN mkdir -p /var/www/session /var/www/html /var/log/php /usr/local/share/bitrix
 # Verify Extensions
 # ===========================================
 RUN set -eux \
-    && php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.1' \
+    && php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.2' \
     && php -m | grep -oiE '^Zend OPcache$' \
     && php -m | grep -oiE '^bz2$' \
     && php -m | grep -oiE '^calendar$' \

@@ -1,24 +1,24 @@
 # ===========================================
-# Makefile for Bitrix PHP 8.1 Apache Image
+# Makefile for Bitrix PHP 8.2 Apache Image
 # ===========================================
 
 IMAGE_NAME = msav/bitrix-php-apache
-TAG = 8.1
-CONTAINER_NAME = bitrix-php-8.1
+TAG = 8.2
+CONTAINER_NAME = bitrix-php-8.2
 
 .PHONY: pull build rebuild push run run-bash stop clean test
 
 # Pull base image (bookworm for libc-client-dev compatibility)
 pull:
-	docker pull php:8.1-apache-bookworm
+	docker pull php:8.2-apache-bookworm
 
 # Build image (context is parent directory php-apache/)
 build: pull
-	cd .. && docker build --rm -t $(IMAGE_NAME):$(TAG) -f 8.1/Dockerfile .
+	cd .. && docker build --rm -t $(IMAGE_NAME):$(TAG) -f 8.2/Dockerfile .
 
 # Rebuild without cache
 rebuild: pull
-	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 8.1/Dockerfile .
+	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 8.2/Dockerfile .
 
 # Push to Docker Hub
 push: build

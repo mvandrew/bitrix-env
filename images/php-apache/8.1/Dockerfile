@@ -63,6 +63,7 @@ RUN set -eux \
         libkrb5-dev \
         librrd-dev \
         libc-client-dev \
+        libsodium-dev \
     && pecl channel-update pecl.php.net \
     && rm -rf /var/lib/apt/lists/*
 
@@ -83,6 +84,7 @@ RUN set -eux \
         bz2 \
         calendar \
         exif \
+        ftp \
         gd \
         gettext \
         imap \
@@ -93,6 +95,7 @@ RUN set -eux \
         pspell \
         shmop \
         sockets \
+        sodium \
         zip
 
 # Install PECL extensions - serialization first (needed by memcached/redis)
@@ -156,8 +159,11 @@ RUN set -ex \
     && docker-php-ext-enable redis \
     && rm -rf /tmp/redis
 
-# Install PEAR DB
-RUN pear install DB
+# Install PEAR DB (direct download to avoid stale channel data in EOL images)
+ARG PEAR_DB_VERSION=1.12.3
+RUN curl -sSfL https://pear.php.net/get/DB-${PEAR_DB_VERSION}.tgz -o /tmp/DB.tgz \
+    && pear install /tmp/DB.tgz \
+    && rm /tmp/DB.tgz
 
 # ===========================================
 # Stage 2: RUNTIME - Final optimized image

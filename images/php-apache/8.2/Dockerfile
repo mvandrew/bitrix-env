@@ -63,6 +63,7 @@ RUN set -eux \
         libkrb5-dev \
         librrd-dev \
         libc-client-dev \
+        libsodium-dev \
     && pecl channel-update pecl.php.net \
     && rm -rf /var/lib/apt/lists/*
 
@@ -83,6 +84,7 @@ RUN set -eux \
         bz2 \
         calendar \
         exif \
+        ftp \
         gd \
         gettext \
         imap \
@@ -93,6 +95,7 @@ RUN set -eux \
         pspell \
         shmop \
         sockets \
+        sodium \
         zip
 
 # Install PECL extensions - serialization first (needed by memcached/redis)

@@ -102,7 +102,8 @@ RUN set -eux \
 RUN set -eux \
     && pecl install igbinary \
     && pecl install msgpack \
-    && docker-php-ext-enable igbinary msgpack
+    && pecl install apcu \
+    && docker-php-ext-enable igbinary msgpack apcu
 
 # Install remaining PECL extensions (consolidated)
 RUN set -eux \
@@ -377,6 +378,7 @@ RUN set -eux \
     && php -m | grep -oiE '^amqp$' \
     && php -m | grep -oiE '^igbinary$' \
     && php -m | grep -oiE '^msgpack$' \
+    && php -m | grep -oiE '^apcu$' \
     && php -m | grep -oiE '^lz4$' \
     && php -m | grep -oiE '^zstd$' \
     && php -m | grep -oiE '^lzf$' \

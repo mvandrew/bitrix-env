@@ -87,7 +87,7 @@ bz2, calendar, exif, gd (WebP, JPEG, PNG, FreeType), gettext, imap, ldap, mysqli
 
 ### PECL
 
-amqp, igbinary, imagick, lz4, lzf, mcrypt, memcache, memcached, msgpack, rdkafka, redis (с igbinary, lz4, lzf, msgpack, zstd), rrd, xlswriter, zstd
+amqp, apcu, igbinary, imagick, lz4, lzf, mcrypt, memcache, memcached, msgpack, rdkafka, redis (с igbinary, lz4, lzf, msgpack, zstd), rrd, xlswriter, zstd
 
 ## Особенности
 
@@ -106,6 +106,10 @@ amqp, igbinary, imagick, lz4, lzf, mcrypt, memcache, memcached, msgpack, rdkafka
 ### Health Check
 
 Файл `/var/www/html/health.php` возвращает HTTP 200 для проверки состояния контейнера.
+
+### OPcache JIT отключён
+
+JIT-компиляция отключена намеренно (`opcache.jit=disable`): команда 1С-Битрикс официально не использует JIT и не гарантирует стабильность продукта с ним. Включать только осознанно.
 
 ## Development vs Production
 

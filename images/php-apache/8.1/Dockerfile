@@ -64,6 +64,10 @@ RUN set -eux \
         librrd-dev \
         libc-client-dev \
         libsodium-dev \
+        # Bitrix document indexing / intl / AVIF / SSH2 (matches vendor reference bxphp8231)
+        libicu-dev \
+        libavif-dev \
+        libssh2-1-dev \
     && pecl channel-update pecl.php.net \
     && rm -rf /var/lib/apt/lists/*
 
@@ -75,7 +79,7 @@ RUN set -eux \
 
 # Configure and install built-in extensions (consolidated)
 RUN set -eux \
-    && docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype \
+    && docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype --with-avif \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl --with-imap \
     && docker-php-ext-configure ldap --with-ldap --with-ldap-sasl \
     && docker-php-ext-configure pdo_mysql --with-zlib-dir=/usr \
@@ -88,6 +92,7 @@ RUN set -eux \
         gd \
         gettext \
         imap \
+        intl \
         ldap \
         mysqli \
         opcache \
@@ -96,6 +101,10 @@ RUN set -eux \
         shmop \
         sockets \
         sodium \
+        sysvmsg \
+        sysvsem \
+        sysvshm \
+        xsl \
         zip
 
 # Install PECL extensions - serialization first (needed by memcached/redis)
@@ -106,6 +115,8 @@ RUN set -eux \
     && docker-php-ext-enable igbinary msgpack apcu
 
 # Install remaining PECL extensions (consolidated)
+# ssh2: pin to 1.5.0 to match vendor reference (bxphp8231); the empty echo
+# answers the interactive "libssh2 prefix" prompt with the autodetected default
 RUN set -eux \
     && echo "/usr" | pecl install amqp \
     && pecl install imagick \
@@ -116,7 +127,8 @@ RUN set -eux \
     && pecl install rdkafka \
     && pecl install rrd \
     && pecl install xlswriter \
-    && docker-php-ext-enable amqp imagick mcrypt memcache memcached lzf rdkafka rrd xlswriter
+    && printf "\n" | pecl install ssh2-1.5.0 \
+    && docker-php-ext-enable amqp imagick mcrypt memcache memcached lzf rdkafka rrd xlswriter ssh2
 
 # Build extensions from Git (lz4, zstd, redis)
 # Note: Using separate RUN commands to avoid TLS issues with large git operations
@@ -160,6 +172,15 @@ RUN set -ex \
     && docker-php-ext-enable redis \
     && rm -rf /tmp/redis
 
+# Install xdebug/xhprof WITHOUT enabling them (CRITICAL: no docker-php-ext-enable).
+# The .so files ship inside the image but are NOT loaded by default, so production
+# performance is unaffected and backward compatibility is preserved.
+# Activation is done at runtime by the entrypoint via XDEBUG_ENABLED / XHPROF_ENABLED.
+# Versions match vendor reference (bxphp8231): xdebug 3.5.x, xhprof 2.3.x.
+RUN set -eux \
+    && pecl install xdebug-3.5.1 \
+    && pecl install xhprof-2.3.10
+
 # Install PEAR DB (direct download to avoid stale channel data in EOL images)
 ARG PEAR_DB_VERSION=1.12.3
 RUN curl -sSfL https://pear.php.net/get/DB-${PEAR_DB_VERSION}.tgz -o /tmp/DB.tgz \
@@ -198,6 +219,11 @@ ENV SMTP_PASSWORD=""
 ENV SMTP_AUTH="off"
 ENV SMTP_TLS="off"
 ENV SMTP_TLS_STARTTLS="off"
+# Debugging/profiling: extensions are compiled into the image but OFF by default.
+# Set XDEBUG_ENABLED=1 / XHPROF_ENABLED=1 at runtime to activate (handled by entrypoint).
+ENV XDEBUG_ENABLED="0"
+ENV XHPROF_ENABLED="0"
+ENV XDEBUG_MODE="off"
 
 # ===========================================
 # Install ONLY Runtime Dependencies
@@ -236,6 +262,14 @@ RUN set -eux \
         libpng16-16 \
         libxpm4 \
         libfreetype6 \
+        # intl (ICU)
+        libicu72 \
+        # AVIF (GD)
+        libavif15 \
+        # XSL
+        libxslt1.1 \
+        # SSH2
+        libssh2-1 \
         # Other
         libbz2-1.0 \
         libaspell15 \
@@ -249,6 +283,10 @@ RUN set -eux \
         wget \
         libapache2-mod-rpaf \
         msmtp \
+        # Bitrix document indexing CLI tools (search.title / fulltext indexing)
+        catdoc \
+        poppler-utils \
+        aspell \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
@@ -383,6 +421,19 @@ RUN set -eux \
     && php -m | grep -oiE '^zstd$' \
     && php -m | grep -oiE '^lzf$' \
     && php -m | grep -oiE '^rdkafka$' \
+    && php -m | grep -oiE '^intl$' \
+    && php -m | grep -oiE '^xsl$' \
+    && php -m | grep -oiE '^sysvmsg$' \
+    && php -m | grep -oiE '^sysvsem$' \
+    && php -m | grep -oiE '^sysvshm$' \
+    && php -m | grep -oiE '^ssh2$' \
+    # AVIF support must be compiled into GD
+    && php -r '$i=gd_info(); exit($i["AVIF Support"]?0:1);' \
+    # xdebug/xhprof must exist as .so but MUST NOT be loaded by default
+    && find /usr/local/lib/php/extensions -name 'xdebug.so' | grep -q . \
+    && find /usr/local/lib/php/extensions -name 'xhprof.so' | grep -q . \
+    && ! php -m | grep -qiE '^xdebug$' \
+    && ! php -m | grep -qiE '^xhprof$' \
     && test -f /usr/local/lib/php/DB.php \
     && echo "All extensions verified successfully!"
 

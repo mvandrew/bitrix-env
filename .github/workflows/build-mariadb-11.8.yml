@@ -1,14 +1,14 @@
-# GitHub Actions workflow for building and pushing MariaDB 10.11 LTS Docker image
+# GitHub Actions workflow for building and pushing MariaDB 11.8 LTS Docker image
 # Repository: github.com/mvandrew/bitrix-env
 #
-# This workflow builds the MariaDB 10.11 LTS image optimized for 1C-Bitrix
-# and pushes it to Docker Hub as msav/bitrix-mariadb:10.11
+# This workflow builds the MariaDB 11.8 LTS image optimized for 1C-Bitrix
+# and pushes it to Docker Hub as msav/bitrix-mariadb:11.8 and :latest
 #
 # Required secrets:
 #   - DOCKERHUB_USERNAME: Docker Hub username
 #   - DOCKERHUB_TOKEN: Docker Hub access token
 
-name: Build and Push MariaDB 10.11
+name: Build and Push MariaDB 11.8
 
 on:
   # Manual trigger via GitHub UI or API
@@ -25,17 +25,17 @@ on:
     branches:
       - master
     paths:
-      - 'images/mariadb/10.11/**'
+      - 'images/mariadb/11.8/**'
       - 'images/mariadb/base/**'
 
 env:
   IMAGE_NAME: msav/bitrix-mariadb
-  TAG: "10.11"
-  TEST_CONTAINER_NAME: mariadb-10.11-test
+  TAG: "11.8"
+  TEST_CONTAINER_NAME: mariadb-11.8-test
 
 jobs:
   build-test-push:
-    name: Build, Test and Push MariaDB 10.11
+    name: Build, Test and Push MariaDB 11.8
     runs-on: self-hosted
     timeout-minutes: 30
 
@@ -53,13 +53,13 @@ jobs:
         working-directory: images/mariadb
         run: |
           echo "Building ${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
-          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 10.11/Dockerfile .
+          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 11.8/Dockerfile .
           echo "Build completed successfully"
 
       - name: Test MariaDB image
         if: ${{ github.event.inputs.skip_tests != 'true' }}
         run: |
-          echo "=== Testing MariaDB 10.11 image ==="
+          echo "=== Testing MariaDB 11.8 image ==="
           echo ""
 
           echo "1. Starting test container..."
@@ -96,6 +96,10 @@ jobs:
           docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'innodb_buffer_pool_size';" 2>/dev/null
 
           echo ""
+          echo "8. Checking innodb_snapshot_isolation (must be OFF for Bitrix on 11.8):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'innodb_snapshot_isolation';" 2>/dev/null
+
+          echo ""
           echo "Stopping test container..."
           docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
 
@@ -108,16 +112,23 @@ jobs:
           docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
           docker rm ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
 
+      - name: Tag as latest
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.IMAGE_NAME }}:latest
+
       - name: Push to Docker Hub
         run: |
           echo "Pushing ${{ env.IMAGE_NAME }}:${{ env.TAG }} to Docker Hub..."
           docker push ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          echo "Pushing ${{ env.IMAGE_NAME }}:latest to Docker Hub..."
+          docker push ${{ env.IMAGE_NAME }}:latest
           echo "Push completed successfully"
 
       - name: Image info
         run: |
           echo ""
-          echo "=== Image Published ==="
+          echo "=== Images Published ==="
           echo "Image: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          echo "Image: ${{ env.IMAGE_NAME }}:latest"
           echo "Pull command: docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
           echo ""

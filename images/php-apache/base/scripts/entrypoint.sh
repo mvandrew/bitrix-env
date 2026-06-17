@@ -26,6 +26,9 @@ set -e
 : "${SMTP_TLS:=off}"
 : "${SMTP_TLS_STARTTLS:=off}"
 : "${CHOWN_MODE:=smart}"  # smart | sync | async | skip
+: "${XDEBUG_ENABLED:=0}"
+: "${XHPROF_ENABLED:=0}"
+: "${XDEBUG_MODE:=off}"
 
 # Paths
 PHP_CONFIG_DIR="/usr/local/etc/php/conf.d"
@@ -87,6 +90,21 @@ echo "" >> "${PHP_CONFIG_FILE_EX}"
 echo "[opcache]" >> "${PHP_CONFIG_FILE_EX}"
 echo "opcache.enable = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}"
 echo "opcache.enable_cli = ${PHP_EX_OPCACHE_ENABLED}" >> "${PHP_CONFIG_FILE_EX}"
+
+# 6b. Optional debugging/profiling extensions (compiled into the image, OFF by default).
+# These .ini files are only written when explicitly requested, so production images
+# never load xdebug/xhprof and incur no performance penalty.
+if [ "${XDEBUG_ENABLED}" = "1" ]; then
+    echo "Enabling Xdebug (mode=${XDEBUG_MODE:-off})"
+    echo "zend_extension=xdebug" > "${PHP_CONFIG_DIR}/zzz-xdebug.ini"
+    echo "xdebug.mode=${XDEBUG_MODE:-off}" >> "${PHP_CONFIG_DIR}/zzz-xdebug.ini"
+    echo "xdebug.start_with_request=trigger" >> "${PHP_CONFIG_DIR}/zzz-xdebug.ini"
+    echo "xdebug.client_host=host.docker.internal" >> "${PHP_CONFIG_DIR}/zzz-xdebug.ini"
+fi
+if [ "${XHPROF_ENABLED}" = "1" ]; then
+    echo "Enabling XHProf"
+    echo "extension=xhprof" > "${PHP_CONFIG_DIR}/zzz-xhprof.ini"
+fi
 
 # 7. Download Bitrix installer if needed
 if [ ! -f "${BITRIX_INDEX}" ] && [ ! -f "${BITRIX_SETUP}" ]; then

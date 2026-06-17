@@ -11,6 +11,9 @@
 # === Bitrix compatibility (MANDATORY) ===
 sql_mode = ""
 transaction-isolation = READ-COMMITTED
+# innodb_snapshot_isolation defaults to ON since MariaDB 11.6.2/11.8 and can raise
+# ER_CHECKREAD (ERROR 1020) under concurrency; keep classic MySQL behaviour for Bitrix.
+innodb_snapshot_isolation = OFF
 max_allowed_packet = 256M
 innodb_strict_mode = OFF
 explicit_defaults_for_timestamp = 1
@@ -31,6 +34,7 @@ innodb_buffer_pool_instances = 4
 innodb_flush_log_at_trx_commit = 1
 innodb_flush_method = O_DIRECT
 innodb_file_per_table = 1
+innodb_default_row_format = DYNAMIC
 innodb_write_io_threads = 16
 innodb_read_io_threads = 16
 
@@ -50,13 +54,13 @@ tmp_table_size = 64M
 slow_query_log = 0
 long_query_time = 2
 
-# === Binary log ===
-expire_logs_days = 10
-max_binlog_size = 100M
+# === Binary log (disabled; matches Bitrix vendor reference) ===
+skip-log-bin
 
 # === Network ===
 skip-name-resolve
 skip-external-locking
+tls_version = TLSv1.2,TLSv1.3
 
 # === MyISAM (legacy support) ===
 myisam-recover-options = BACKUP

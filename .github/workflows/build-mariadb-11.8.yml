@@ -1,17 +1,14 @@
-# GitHub Actions workflow for building and pushing PHP 8.1 Apache Docker image
+# GitHub Actions workflow for building and pushing MariaDB 11.8 LTS Docker image
 # Repository: github.com/mvandrew/bitrix-env
 #
-# This workflow builds the PHP 8.1 Apache image optimized for 1C-Bitrix
-# and pushes it to Docker Hub as msav/bitrix-php-apache:8.1
-#
-# Note: This is a multi-stage build that compiles many PHP extensions,
-# so it takes longer to build than simple images (up to 30-60 minutes)
+# This workflow builds the MariaDB 11.8 LTS image optimized for 1C-Bitrix
+# and pushes it to Docker Hub as msav/bitrix-mariadb:11.8 and :latest
 #
 # Required secrets:
 #   - DOCKERHUB_USERNAME: Docker Hub username
 #   - DOCKERHUB_TOKEN: Docker Hub access token
 
-name: Build and Push PHP 8.1 Apache
+name: Build and Push MariaDB 11.8
 
 on:
   # Manual trigger via GitHub UI or API
@@ -32,16 +29,15 @@ on:
       - 'v*'
 
 env:
-  IMAGE_NAME: msav/bitrix-php-apache
-  TAG: "8.1"
-  TEST_CONTAINER_NAME: php-apache-8.1-test
-  TEST_PORT: 8888
+  IMAGE_NAME: msav/bitrix-mariadb
+  TAG: "11.8"
+  TEST_CONTAINER_NAME: mariadb-11.8-test
 
 jobs:
   # Gate job: decide whether a build is required for this event.
   # Build runs only when one of the following is true:
   #   - manual dispatch or a version tag (v*) is pushed
-  #   - the commit message contains "#all" or the per-image tag "#php-apache-8.1"
+  #   - the commit message contains "#all" or the per-image tag "#mariadb-11.8"
   #   - related image files changed in the pushed diff
   # Commit message is passed via env (never interpolated into run) to avoid shell injection.
   detect:
@@ -74,8 +70,8 @@ jobs:
               echo "#all tag -> build."
               should_build=true
             fi
-            if printf '%s' "$COMMIT_MSG" | grep -qF '#php-apache-8.1'; then
-              echo "#php-apache-8.1 tag -> build."
+            if printf '%s' "$COMMIT_MSG" | grep -qF '#mariadb-11.8'; then
+              echo "#mariadb-11.8 tag -> build."
               should_build=true
             fi
             if [ "$should_build" != "true" ]; then
@@ -93,7 +89,7 @@ jobs:
               else
                 changed=$(git diff --name-only "$base" HEAD || true)
                 echo "Changed files:"; echo "$changed"
-                if echo "$changed" | grep -qE '^images/php-apache/(8\.1|base)/'; then
+                if echo "$changed" | grep -qE '^images/mariadb/(11\.8|base)/'; then
                   echo "Related paths changed -> build."
                   should_build=true
                 fi
@@ -107,9 +103,9 @@ jobs:
   build-test-push:
     needs: detect
     if: ${{ needs.detect.outputs.should_build == 'true' }}
-    name: Build, Test and Push PHP 8.1 Apache
+    name: Build, Test and Push MariaDB 11.8
     runs-on: self-hosted
-    timeout-minutes: 60  # Multi-stage build takes longer
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -122,51 +118,61 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
-        working-directory: images/php-apache
+        working-directory: images/mariadb
         run: |
           echo "Building ${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
-          echo "Note: Multi-stage build may take 20-40 minutes"
-          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 8.1/Dockerfile .
+          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 11.8/Dockerfile .
           echo "Build completed successfully"
 
-      - name: Test PHP image
+      - name: Test MariaDB image
         if: ${{ github.event.inputs.skip_tests != 'true' }}
         run: |
-          echo "=== Testing PHP 8.1 Apache image ==="
+          echo "=== Testing MariaDB 11.8 image ==="
           echo ""
 
-          echo "1. Testing PHP version..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -v | head -1
+          echo "1. Starting test container..."
+          docker run --rm -d --name ${{ env.TEST_CONTAINER_NAME }} \
+            -e MYSQL_ROOT_PASSWORD=testpwd \
+            -e MYSQL_DATABASE=bitrix_test \
+            ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+          echo "   Waiting for MariaDB to initialize (45s)..."
+          sleep 45
 
           echo ""
-          echo "2. Testing key extensions..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -m | grep -E '^(redis|imagick|opcache|mysqli|gd|memcached)$' | sort
+          echo "2. Checking MariaDB version:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SELECT VERSION();" 2>/dev/null
 
           echo ""
-          echo "3. Testing all required extensions..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -m | grep -E '^(bz2|calendar|curl|exif|gd|gettext|imap|ldap|mbstring|mcrypt|memcache|memcached|mysqli|opcache|pdo_mysql|redis|sockets|zip|imagick|amqp|igbinary|msgpack|lz4|zstd|lzf|rdkafka|rrd|xlswriter)$' | wc -l
+          echo "3. Checking sql_mode (must be empty for Bitrix):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'sql_mode';" 2>/dev/null
 
           echo ""
-          echo "4. Testing health check endpoint..."
-          docker run --rm -d -p ${{ env.TEST_PORT }}:80 --name ${{ env.TEST_CONTAINER_NAME }} ${{ env.IMAGE_NAME }}:${{ env.TAG }}
-          sleep 5
+          echo "4. Checking character_set_server (must be utf8mb4):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'character_set_server';" 2>/dev/null
 
-          if curl -sf http://localhost:${{ env.TEST_PORT }}/health.php; then
-            echo " - Health check OK"
-          else
-            echo " - Health check failed!"
-            docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
-            exit 1
-          fi
+          echo ""
+          echo "5. Checking collation_server:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'collation_server';" 2>/dev/null
 
+          echo ""
+          echo "6. Checking transaction_isolation (must be READ-COMMITTED):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'transaction_isolation';" 2>/dev/null
+
+          echo ""
+          echo "7. Checking innodb_buffer_pool_size:"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'innodb_buffer_pool_size';" 2>/dev/null
+
+          echo ""
+          echo "8. Checking innodb_snapshot_isolation (must be OFF for Bitrix on 11.8):"
+          docker exec ${{ env.TEST_CONTAINER_NAME }} mariadb -uroot -ptestpwd -e "SHOW VARIABLES LIKE 'innodb_snapshot_isolation';" 2>/dev/null
+
+          echo ""
+          echo "Stopping test container..."
           docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
 
           echo ""
-          echo "5. Verifying PEAR DB package..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} test -f /usr/local/lib/php/DB.php && echo "PEAR DB.php - OK"
-
-          echo ""
-          echo "=== All tests passed! ==="
+          echo "=== Tests completed successfully ==="
 
       - name: Cleanup test container on failure
         if: failure()
@@ -174,23 +180,23 @@ jobs:
           docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
           docker rm ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
 
+      - name: Tag as latest
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.IMAGE_NAME }}:latest
+
       - name: Push to Docker Hub
         run: |
           echo "Pushing ${{ env.IMAGE_NAME }}:${{ env.TAG }} to Docker Hub..."
           docker push ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          echo "Pushing ${{ env.IMAGE_NAME }}:latest to Docker Hub..."
+          docker push ${{ env.IMAGE_NAME }}:latest
           echo "Push completed successfully"
 
       - name: Image info
         run: |
           echo ""
-          echo "=== Image Published ==="
+          echo "=== Images Published ==="
           echo "Image: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          echo "Image: ${{ env.IMAGE_NAME }}:latest"
           echo "Pull command: docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
-          echo ""
-          echo "Included PHP extensions:"
-          echo "  Core: mysqli, pdo_mysql, gd, mbstring, curl, xml, zip, opcache"
-          echo "  Cache: redis, memcached, memcache"
-          echo "  Compression: lz4, zstd, lzf, bz2"
-          echo "  Messaging: amqp, rdkafka"
-          echo "  Other: imagick, imap, ldap, mcrypt, xlswriter, rrd"
           echo ""

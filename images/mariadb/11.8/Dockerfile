@@ -1,18 +1,18 @@
-# MariaDB 10.11 LTS for 1C-Bitrix
+# MariaDB 11.8 LTS for 1C-Bitrix
 # Optimized configuration with UTF8MB4 and Bitrix-compatible settings
 #
 # Build from parent directory:
-#   cd .. && docker build -t msav/bitrix-mariadb:10.11 -f 10.11/Dockerfile .
+#   cd .. && docker build -t msav/bitrix-mariadb:11.8 -f 11.8/Dockerfile .
 #
 # Override InnoDB settings by mounting custom config:
 #   -v ./my-custom.cnf:/etc/mysql/bitrix.d/custom.cnf
 
-FROM mariadb:10.11
+FROM mariadb:11.8
 
 LABEL maintainer="Andrey Mishchenko <info@msav.ru>"
 LABEL org.opencontainers.image.title="Bitrix MariaDB"
-LABEL org.opencontainers.image.version="10.11"
-LABEL org.opencontainers.image.description="MariaDB 10.11 LTS optimized for 1C-Bitrix CMS and Bitrix24"
+LABEL org.opencontainers.image.version="11.8"
+LABEL org.opencontainers.image.description="MariaDB 11.8 LTS optimized for 1C-Bitrix CMS and Bitrix24"
 LABEL org.opencontainers.image.vendor="msav.ru"
 LABEL org.opencontainers.image.source="https://github.com/mvandrew/bitrix-env"
 

@@ -11,6 +11,9 @@
 # === Bitrix compatibility (MANDATORY) ===
 sql_mode = ""
 transaction-isolation = READ-COMMITTED
+# innodb_snapshot_isolation defaults to ON since MariaDB 11.6.2/11.8 and can raise
+# ER_CHECKREAD (ERROR 1020) under concurrency; keep classic MySQL behaviour for Bitrix.
+innodb_snapshot_isolation = OFF
 max_allowed_packet = 256M
 innodb_strict_mode = OFF
 explicit_defaults_for_timestamp = 1

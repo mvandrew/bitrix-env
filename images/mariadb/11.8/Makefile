@@ -1,15 +1,15 @@
-# MariaDB 10.11 LTS Docker Image for 1C-Bitrix
+# MariaDB 11.8 LTS Docker Image for 1C-Bitrix
 # Build, test, and publish commands
 
 IMAGE_NAME = msav/bitrix-mariadb
-TAG = 10.11
-CONTAINER_NAME = bitrix-mariadb-10.11
+TAG = 11.8
+CONTAINER_NAME = bitrix-mariadb-11.8
 
 .PHONY: pull build rebuild push run run-bash stop clean test help
 
 help:
 	@echo "Available targets:"
-	@echo "  pull      - Pull base mariadb:10.11 image"
+	@echo "  pull      - Pull base mariadb:11.8 image"
 	@echo "  build     - Build the image"
 	@echo "  rebuild   - Build without cache"
 	@echo "  push      - Push to Docker Hub"
@@ -20,13 +20,13 @@ help:
 	@echo "  test      - Build and test the image"
 
 pull:
-	docker pull mariadb:10.11
+	docker pull mariadb:11.8
 
 build: pull
-	cd .. && docker build --rm -t $(IMAGE_NAME):$(TAG) -f 10.11/Dockerfile .
+	cd .. && docker build --rm -t $(IMAGE_NAME):$(TAG) -f 11.8/Dockerfile .
 
 rebuild: pull
-	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 10.11/Dockerfile .
+	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 11.8/Dockerfile .
 
 push: build
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):latest
@@ -41,7 +41,7 @@ run: build
 		-e MYSQL_PASSWORD=bitrixpwd \
 		-p 3306:3306 \
 		$(IMAGE_NAME):$(TAG)
-	@echo "MariaDB 10.11 started on port 3306"
+	@echo "MariaDB 11.8 started on port 3306"
 	@echo "Database: bitrix, User: bitrix, Password: bitrixpwd"
 
 run-bash: build
@@ -55,7 +55,7 @@ clean: stop
 	docker rmi $(IMAGE_NAME):$(TAG) 2>/dev/null || true
 
 test: build
-	@echo "=== Testing MariaDB 10.11 image ==="
+	@echo "=== Testing MariaDB 11.8 image ==="
 	@echo ""
 	@echo "1. Starting container..."
 	docker run --rm -d --name $(CONTAINER_NAME)-test \

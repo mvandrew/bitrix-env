@@ -23,13 +23,13 @@ on:
         default: false
         type: boolean
 
-  # Automatic trigger on push to master branch
+  # Automatic trigger on push to master branch or version tags.
+  # Conditional build logic is handled by the detect job below.
   push:
     branches:
       - master
-    paths:
-      - 'images/php-apache/8.1/**'
-      - 'images/php-apache/base/**'
+    tags:
+      - 'v*'
 
 env:
   IMAGE_NAME: msav/bitrix-php-apache
@@ -38,7 +38,75 @@ env:
   TEST_PORT: 8888
 
 jobs:
+  # Gate job: decide whether a build is required for this event.
+  # Build runs only when one of the following is true:
+  #   - manual dispatch or a version tag (v*) is pushed
+  #   - the commit message contains "#all" or the per-image tag "#php-apache-8.1"
+  #   - related image files changed in the pushed diff
+  # Commit message is passed via env (never interpolated into run) to avoid shell injection.
+  detect:
+    name: Detect build conditions
+    runs-on: self-hosted
+    outputs:
+      should_build: ${{ steps.decide.outputs.should_build }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decide whether to build
+        id: decide
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          should_build=false
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$REF_TYPE" = "tag" ]; then
+            echo "Manual dispatch or version tag -> build."
+            should_build=true
+          else
+            if printf '%s' "$COMMIT_MSG" | grep -qE '#all([^[:alnum:]]|$)'; then
+              echo "#all tag -> build."
+              should_build=true
+            fi
+            if printf '%s' "$COMMIT_MSG" | grep -qF '#php-apache-8.1'; then
+              echo "#php-apache-8.1 tag -> build."
+              should_build=true
+            fi
+            if [ "$should_build" != "true" ]; then
+              zero_sha="0000000000000000000000000000000000000000"
+              base=""
+              if [ -n "${BEFORE_SHA:-}" ] && [ "$BEFORE_SHA" != "$zero_sha" ] \
+                 && git rev-parse --verify --quiet "${BEFORE_SHA}^{commit}" >/dev/null; then
+                base="$BEFORE_SHA"
+              elif git rev-parse --verify --quiet "HEAD~1" >/dev/null; then
+                base="HEAD~1"
+              fi
+              if [ -z "$base" ]; then
+                echo "No usable diff base -> build (safe default)."
+                should_build=true
+              else
+                changed=$(git diff --name-only "$base" HEAD || true)
+                echo "Changed files:"; echo "$changed"
+                if echo "$changed" | grep -qE '^images/php-apache/(8\.1|base)/'; then
+                  echo "Related paths changed -> build."
+                  should_build=true
+                fi
+              fi
+            fi
+          fi
+
+          echo "should_build=$should_build"
+          echo "should_build=$should_build" >> "$GITHUB_OUTPUT"
+
   build-test-push:
+    needs: detect
+    if: ${{ needs.detect.outputs.should_build == 'true' }}
     name: Build, Test and Push PHP 8.1 Apache
     runs-on: self-hosted
     timeout-minutes: 60  # Multi-stage build takes longer

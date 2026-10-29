@@ -89,7 +89,7 @@ jobs:
               else
                 changed=$(git diff --name-only "$base" HEAD || true)
                 echo "Changed files:"; echo "$changed"
-                if echo "$changed" | grep -qE '^images/mariadb/(11\.8|base)/'; then
+                if echo "$changed" | grep -qE '^(images/mariadb/(11\.8|base)/|\.github/workflows/build-mariadb-11\.8\.yml$)'; then
                   echo "Related paths changed -> build."
                   should_build=true
                 fi
@@ -121,7 +121,8 @@ jobs:
         working-directory: images/mariadb
         run: |
           echo "Building ${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
-          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 11.8/Dockerfile .
+          # Проверяем обновления базовых образов в registry при каждой сборке.
+          docker build --pull --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 11.8/Dockerfile .
           echo "Build completed successfully"
 
       - name: Test MariaDB image

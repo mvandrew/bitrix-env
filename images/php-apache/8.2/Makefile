@@ -47,18 +47,6 @@ clean: stop
 	docker rmi -f $(IMAGE_NAME):$(TAG) 2>/dev/null || true
 	rm -rf ./data
 
-# Test extensions
+# Проверка PHP, расширений и HTTP через общий сценарий
 test: build
-	@echo "Testing PHP version..."
-	docker run --rm $(IMAGE_NAME):$(TAG) php -v | head -1
-	@echo ""
-	@echo "Testing key extensions..."
-	docker run --rm $(IMAGE_NAME):$(TAG) php -m | grep -E '^(redis|imagick|opcache|mysqli|gd|memcached)$$' | sort
-	@echo ""
-	@echo "Testing health check..."
-	docker run --rm -d -p 8888:80 --name $(CONTAINER_NAME)-test $(IMAGE_NAME):$(TAG)
-	sleep 3
-	curl -sf http://localhost:8888/health.php && echo " - Health check OK"
-	docker stop $(CONTAINER_NAME)-test
-	@echo ""
-	@echo "All tests passed!"
+	bash ../base/scripts/test-image.sh "$(IMAGE_NAME):$(TAG)" "8.2" 0 "$(CONTAINER_NAME)-test"

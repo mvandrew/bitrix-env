@@ -109,7 +109,6 @@ RUN set -eux \
 # Install PECL extensions - serialization first (needed by memcached/redis)
 COPY base/scripts/pecl-install.sh /usr/local/bin/pecl-install
 COPY base/scripts/pecl-compatible.php /usr/local/bin/pecl-compatible.php
-ENV PECL_IPV4_FALLBACK=1
 RUN chmod +x /usr/local/bin/pecl-install
 RUN set -eux \
     && pecl-install igbinary \

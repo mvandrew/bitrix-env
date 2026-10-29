@@ -17,51 +17,8 @@ trap 'exit 143' TERM
 selector=$(dirname "$0")/pecl-compatible.php
 download() {
     # curl не читает stdin: ответы на configure-вопросы получает сам PECL.
-    if curl -sSfL --retry 3 --retry-all-errors --retry-delay 5 \
-        --connect-timeout 15 --max-time 120 "$1" -o "$2"; then
-        return 0
-    else
-        download_status=$?
-    fi
-
-    # Пока переключение включается только в builder PHP 8.2.
-    if [ "${PECL_IPV4_FALLBACK:-0}" != 1 ]; then
-        return "$download_status"
-    fi
-    case "$download_status" in
-        6|7|18|28|35|52|55|56) ;;
-        *) return "$download_status" ;;
-    esac
-    case "$1" in
-        https://pecl.php.net/*) ;;
-        *) return "$download_status" ;;
-    esac
-
-    echo "PECL: curl завершился с кодом $download_status; получаем актуальные IPv4 pecl.php.net" >&2
-    if ! getent ahostsv4 pecl.php.net > "$work_dir/addresses.raw"; then
-        echo 'PECL: не удалось получить IPv4-адреса для переключения' >&2
-        return "$download_status"
-    fi
-    awk '!seen[$1]++ { print $1 }' "$work_dir/addresses.raw" > "$work_dir/addresses"
-    # fd 3 может быть занят списком релизов; stdin нужен для ответов PECL.
-    while IFS= read -r download_ip <&4; do
-        echo "PECL: пробуем IPv4 $download_ip для $1" >&2
-        # --resolve сохраняет имя хоста, SNI и проверку сертификата.
-        if curl -4 -sSfL --resolve "pecl.php.net:443:$download_ip" \
-            --connect-timeout 15 --max-time 120 "$1" -o "$2"; then
-            echo "PECL: загрузка через $download_ip выполнена" >&2
-            return 0
-        else
-            download_status=$?
-            echo "PECL: IPv4 $download_ip, ошибка curl $download_status" >&2
-        fi
-        case "$download_status" in
-            6|7|18|28|35|52|55|56) ;;
-            *) return "$download_status" ;;
-        esac
-    done 4< "$work_dir/addresses"
-    echo 'PECL: доступные IPv4-адреса исчерпаны' >&2
-    return "$download_status"
+    curl -sSfL --retry 3 --retry-all-errors --retry-delay 5 \
+        --connect-timeout 15 --max-time 120 "$1" -o "$2"
 }
 check_archive() {
     if ! tar -xOf "$work_dir/package.tgz" package2.xml > "$work_dir/package.xml" 2>/dev/null; then

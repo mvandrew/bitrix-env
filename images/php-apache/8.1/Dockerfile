@@ -14,6 +14,9 @@ FROM php:8.1-apache-bookworm AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+COPY base/scripts/pecl-retry.sh /usr/local/bin/pecl-retry
+RUN chmod +x /usr/local/bin/pecl-retry
+
 # Install ALL build dependencies in one layer
 RUN set -eux \
     && apt-get update \
@@ -68,7 +71,7 @@ RUN set -eux \
         libicu-dev \
         libavif-dev \
         libssh2-1-dev \
-    && pecl channel-update pecl.php.net \
+    && pecl-retry channel-update pecl.php.net \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for architecture-specific libraries
@@ -109,25 +112,25 @@ RUN set -eux \
 
 # Install PECL extensions - serialization first (needed by memcached/redis)
 RUN set -eux \
-    && pecl install igbinary \
-    && pecl install msgpack \
-    && pecl install apcu \
+    && pecl-retry install igbinary \
+    && pecl-retry install msgpack \
+    && pecl-retry install apcu \
     && docker-php-ext-enable igbinary msgpack apcu
 
 # Install remaining PECL extensions (consolidated)
 # ssh2: pin to 1.5.0 to match vendor reference (bxphp8231); the empty echo
 # answers the interactive "libssh2 prefix" prompt with the autodetected default
 RUN set -eux \
-    && echo "/usr" | pecl install amqp \
-    && pecl install imagick \
-    && pecl install mcrypt \
-    && pecl install memcache \
-    && printf "\n\n\nyes\nyes\nyes\n" | pecl install memcached \
-    && pecl install lzf \
-    && pecl install rdkafka \
-    && pecl install rrd \
-    && pecl install xlswriter \
-    && printf "\n" | pecl install ssh2-1.5.0 \
+    && echo "/usr" | pecl-retry install amqp \
+    && pecl-retry install imagick \
+    && pecl-retry install mcrypt \
+    && pecl-retry install memcache \
+    && printf "\n\n\nyes\nyes\nyes\n" | pecl-retry install memcached \
+    && pecl-retry install lzf \
+    && pecl-retry install rdkafka \
+    && pecl-retry install rrd \
+    && pecl-retry install xlswriter \
+    && printf "\n" | pecl-retry install ssh2-1.5.0 \
     && docker-php-ext-enable amqp imagick mcrypt memcache memcached lzf rdkafka rrd xlswriter ssh2
 
 # Build extensions from Git (lz4, zstd, redis)
@@ -178,12 +181,12 @@ RUN set -ex \
 # Activation is done at runtime by the entrypoint via XDEBUG_ENABLED / XHPROF_ENABLED.
 # Versions match vendor reference (bxphp8231): xdebug 3.5.x, xhprof 2.3.x.
 RUN set -eux \
-    && pecl install xdebug-3.5.1 \
-    && pecl install xhprof-2.3.10
+    && pecl-retry install xdebug-3.5.1 \
+    && pecl-retry install xhprof-2.3.10
 
 # Install PEAR DB (direct download to avoid stale channel data in EOL images)
 ARG PEAR_DB_VERSION=1.12.3
-RUN curl -sSfL https://pear.php.net/get/DB-${PEAR_DB_VERSION}.tgz -o /tmp/DB.tgz \
+RUN curl -sSfL --retry 3 --retry-all-errors --connect-timeout 15 --max-time 120 https://pear.php.net/get/DB-${PEAR_DB_VERSION}.tgz -o /tmp/DB.tgz \
     && pear install /tmp/DB.tgz \
     && rm /tmp/DB.tgz
 

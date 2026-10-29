@@ -133,47 +133,9 @@ jobs:
       - name: Test PHP image
         if: ${{ github.event.inputs.skip_tests != 'true' }}
         run: |
-          echo "=== Testing PHP 8.2 Apache image ==="
-          echo ""
-
-          echo "1. Testing PHP version..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -v | head -1
-
-          echo ""
-          echo "2. Testing key extensions..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -m | grep -E '^(redis|imagick|opcache|mysqli|gd|memcached|ftp|sodium)$' | sort
-
-          echo ""
-          echo "3. Testing all required extensions..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} php -m | grep -E '^(bz2|calendar|curl|exif|ftp|gd|gettext|imap|ldap|mbstring|mcrypt|memcache|memcached|mysqli|opcache|pdo_mysql|redis|sockets|sodium|zip|imagick|amqp|igbinary|msgpack|lz4|zstd|lzf|rdkafka|rrd|xlswriter)$' | wc -l
-
-          echo ""
-          echo "4. Testing health check endpoint..."
-          docker run --rm -d -p ${{ env.TEST_PORT }}:80 --name ${{ env.TEST_CONTAINER_NAME }} ${{ env.IMAGE_NAME }}:${{ env.TAG }}
-          sleep 5
-
-          if curl -sf http://localhost:${{ env.TEST_PORT }}/health.php; then
-            echo " - Health check OK"
-          else
-            echo " - Health check failed!"
-            docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
-            exit 1
-          fi
-
-          docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
-
-          echo ""
-          echo "5. Verifying PEAR DB package..."
-          docker run --rm ${{ env.IMAGE_NAME }}:${{ env.TAG }} test -f /usr/local/lib/php/DB.php && echo "PEAR DB.php - OK"
-
-          echo ""
-          echo "=== All tests passed! ==="
-
-      - name: Cleanup test container on failure
-        if: failure()
-        run: |
-          docker stop ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
-          docker rm ${{ env.TEST_CONTAINER_NAME }} 2>/dev/null || true
+          bash images/php-apache/base/scripts/test-image.sh \
+            "${{ env.IMAGE_NAME }}:${{ env.TAG }}" "${{ env.TAG }}" \
+            "${{ env.TEST_PORT }}" "${{ env.TEST_CONTAINER_NAME }}"
 
       - name: Tag as latest
         run: |

@@ -2,7 +2,7 @@
 # Repository: github.com/mvandrew/bitrix-env
 #
 # This workflow builds the PHP 8.2 Apache image optimized for 1C-Bitrix
-# and pushes it to Docker Hub as msav/bitrix-php-apache:8.2 and :latest
+# and pushes it to Docker Hub as msav/bitrix-php-apache:8.2
 #
 # Note: This is a multi-stage build that compiles many PHP extensions,
 # so it takes longer to build than simple images (up to 30-60 minutes)
@@ -137,24 +137,17 @@ jobs:
             "${{ env.IMAGE_NAME }}:${{ env.TAG }}" "${{ env.TAG }}" \
             "${{ env.TEST_PORT }}" "${{ env.TEST_CONTAINER_NAME }}"
 
-      - name: Tag as latest
-        run: |
-          docker tag ${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.IMAGE_NAME }}:latest
-
       - name: Push to Docker Hub
         run: |
           echo "Pushing ${{ env.IMAGE_NAME }}:${{ env.TAG }} to Docker Hub..."
           docker push ${{ env.IMAGE_NAME }}:${{ env.TAG }}
-          echo "Pushing ${{ env.IMAGE_NAME }}:latest to Docker Hub..."
-          docker push ${{ env.IMAGE_NAME }}:latest
           echo "Push completed successfully"
 
       - name: Image info
         run: |
           echo ""
-          echo "=== Images Published ==="
+          echo "=== Image Published ==="
           echo "Image: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
-          echo "Image: ${{ env.IMAGE_NAME }}:latest"
           echo "Pull command: docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
           echo ""
           echo "Included PHP extensions:"

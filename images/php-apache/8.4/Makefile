@@ -20,9 +20,11 @@ build: pull
 rebuild: pull
 	cd .. && docker build --no-cache --rm -t $(IMAGE_NAME):$(TAG) -f 8.4/Dockerfile .
 
-# Push to Docker Hub
+# Публикация версионного тега и latest в Docker Hub
 push: test
 	docker push $(IMAGE_NAME):$(TAG)
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):latest
 
 # Run container
 run: build

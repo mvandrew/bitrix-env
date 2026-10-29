@@ -6,14 +6,19 @@ Docker-образы PHP с Apache, оптимизированные для ра�
 
 | Тег | PHP | Базовый образ | Назначение |
 |-----|-----|---------------|------------|
-| `8.1` | 8.1 | php:8.1-apache-bookworm | Проекты 2020-2023, рекомендуемая версия |
-| `8.2` | 8.2 | php:8.2-apache-bookworm | Проекты 2023+, современный стек |
+| `8.1` | 8.1 | php:8.1-apache-bookworm | Для совместимости с устаревшими проектами |
+| `8.2` | 8.2 | php:8.2-apache-bookworm | Проекты с поддержкой PHP 8.2 |
+| `8.4`, `latest` | 8.4 | php:8.4-apache-bookworm | Рекомендуемая версия для проектов с поддержкой PHP 8.4 |
 
-Теги 8.1 и 8.2 поддерживаются в полном паритете (одинаковый набор расширений и конфигураций).
+Версии 8.1, 8.2 и 8.4 содержат одинаковый набор расширений, конфигураций и инструментов. В PHP 8.4 IMAP и PSpell устанавливаются из PECL вместо сборки из исходников PHP.
+
+Workflow PHP 8.4 публикует теги `8.4` и `latest` из одной сборки после обязательных проверок. Тег `latest` переходит на PHP 8.4 при первой успешной публикации этого workflow; версия 8.2 публикуется только под тегом `8.2`.
+
+Перед переводом существующего сайта на PHP 8.4 проверьте совместимость ядра Битрикс, модулей и собственного кода.
 
 ### Архивные версии (7.4 / 7.2)
 
-Образы PHP 7.4 и 7.2 перемещены в архив (`bitrix-env/images/archive/`), не поддерживаются и не обновляются; PHP 7.2 достиг EOL. Для новых проектов используйте 8.1 или 8.2.
+Образы PHP 7.4 и 7.2 перемещены в архив (`bitrix-env/images/archive/`), не поддерживаются и не обновляются; PHP 7.2 достиг EOL. Для новых проектов используйте 8.4.
 
 ## Быстрый старт
 
@@ -26,7 +31,7 @@ docker run -d \
   -v $(pwd)/www:/var/www/html \
   -e MEMORY_LIMIT=1024M \
   -e PHP_INI_TYPE=development \
-  msav/bitrix-php-apache:8.1
+  msav/bitrix-php-apache:8.4
 ```
 
 ### Docker Compose
@@ -34,7 +39,7 @@ docker run -d \
 ```yaml
 services:
   php:
-    image: msav/bitrix-php-apache:8.1
+    image: msav/bitrix-php-apache:8.4
     ports:
       - "80:80"
       - "443:443"
@@ -101,6 +106,8 @@ services:
 ### Встроенные
 
 bz2, calendar, exif, ftp, gd (WebP, JPEG, PNG, XPM, FreeType, AVIF), gettext, imap, intl, ldap, mysqli, opcache, pdo_mysql, pspell, shmop, sockets, sodium, sysvmsg, sysvsem, sysvshm, xsl, zip
+
+В PHP 8.4 расширения `imap` и `pspell` из этого списка устанавливаются через PECL.
 
 ### PECL
 

@@ -93,7 +93,7 @@ jobs:
               else
                 changed=$(git diff --name-only "$base" HEAD || true)
                 echo "Changed files:"; echo "$changed"
-                if echo "$changed" | grep -qE '^images/php-apache/(8\.1|base)/'; then
+                if echo "$changed" | grep -qE '^(images/php-apache/(8\.1|base)/|\.github/workflows/build-php-apache-8\.1\.yml$)'; then
                   echo "Related paths changed -> build."
                   should_build=true
                 fi
@@ -126,7 +126,8 @@ jobs:
         run: |
           echo "Building ${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
           echo "Note: Multi-stage build may take 20-40 minutes"
-          docker build --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 8.1/Dockerfile .
+          # Проверяем обновления базовых образов в registry при каждой сборке.
+          docker build --pull --rm -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} -f 8.1/Dockerfile .
           echo "Build completed successfully"
 
       - name: Test PHP image

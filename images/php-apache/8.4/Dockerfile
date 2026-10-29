@@ -14,9 +14,6 @@ FROM php:8.4-apache-bookworm AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-COPY base/scripts/pecl-retry.sh /usr/local/bin/pecl-retry
-RUN chmod +x /usr/local/bin/pecl-retry
-
 # Install ALL build dependencies in one layer
 RUN set -eux \
     && apt-get update \
@@ -71,7 +68,6 @@ RUN set -eux \
         libicu-dev \
         libavif-dev \
         libssh2-1-dev \
-    && pecl-retry channel-update pecl.php.net \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlinks for architecture-specific libraries
@@ -106,34 +102,35 @@ RUN set -eux \
         xsl \
         zip
 
-# В PHP 8.4 IMAP и PSpell перенесены в PECL. Берём стабильные релизы;
-# несовместимость должна останавливать сборку, без отката на старую версию.
+# В PHP 8.4 IMAP и PSpell устанавливаются из совместимых stable-релизов PECL.
+COPY base/scripts/pecl-install.sh /usr/local/bin/pecl-install
+COPY base/scripts/pecl-compatible.php /usr/local/bin/pecl-compatible.php
+RUN chmod +x /usr/local/bin/pecl-install
 RUN set -eux \
-    && pecl-retry install --configureoptions='with-imap="yes" with-kerberos="yes" with-imap-ssl="yes"' imap-stable \
-    && pecl-retry install pspell-stable \
+    && pecl-install imap --configureoptions='with-imap="yes" with-kerberos="yes" with-imap-ssl="yes"' \
+    && pecl-install pspell \
     && docker-php-ext-enable imap pspell
 
 # Install PECL extensions - serialization first (needed by memcached/redis)
 RUN set -eux \
-    && pecl-retry install igbinary \
-    && pecl-retry install msgpack \
-    && pecl-retry install apcu \
+    && pecl-install igbinary \
+    && pecl-install msgpack \
+    && pecl-install apcu \
     && docker-php-ext-enable igbinary msgpack apcu
 
 # Install remaining PECL extensions (consolidated)
-# ssh2: pin to 1.5.0 to match vendor reference (bxphp8231); the empty echo
-# answers the interactive "libssh2 prefix" prompt with the autodetected default
+# Пустая строка выбирает автоматически определённый путь libssh2.
 RUN set -eux \
-    && echo "/usr" | pecl-retry install amqp \
-    && pecl-retry install imagick \
-    && pecl-retry install mcrypt \
-    && pecl-retry install memcache \
-    && printf "\n\n\nyes\nyes\nyes\n" | pecl-retry install memcached \
-    && pecl-retry install lzf \
-    && pecl-retry install rdkafka \
-    && pecl-retry install rrd \
-    && pecl-retry install xlswriter \
-    && printf "\n" | pecl-retry install ssh2-1.5.0 \
+    && echo "/usr" | pecl-install amqp \
+    && pecl-install imagick \
+    && pecl-install mcrypt \
+    && pecl-install memcache \
+    && printf "\n\n\nyes\nyes\nyes\n" | pecl-install memcached \
+    && pecl-install lzf \
+    && pecl-install rdkafka \
+    && pecl-install rrd \
+    && pecl-install xlswriter \
+    && printf "\n" | pecl-install ssh2 \
     && docker-php-ext-enable amqp imagick mcrypt memcache memcached lzf rdkafka rrd xlswriter ssh2
 
 # Build extensions from Git (lz4, zstd, redis)
@@ -141,7 +138,9 @@ RUN set -eux \
 RUN set -ex \
     && git clone https://github.com/kjdev/php-ext-lz4 /tmp/lz4 \
     && cd /tmp/lz4 \
-    && git checkout $(git tag | grep -E '^[.0-9]+$' | sort -V | tail -1) \
+    && tag=$(git tag | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1) \
+    && test -n "$tag" \
+    && git checkout --detach "$tag" \
     && phpize \
     && ./configure --enable-lz4 --with-lz4-includedir=/usr \
     && make -j$(nproc) \
@@ -152,7 +151,9 @@ RUN set -ex \
 RUN set -ex \
     && git clone https://github.com/kjdev/php-ext-zstd /tmp/zstd \
     && cd /tmp/zstd \
-    && git checkout $(git tag | grep -E '^[.0-9]+$' | sort -V | tail -1) \
+    && tag=$(git tag | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1) \
+    && test -n "$tag" \
+    && git checkout --detach "$tag" \
     && phpize \
     && ./configure --enable-zstd --with-libzstd \
     && make -j$(nproc) \
@@ -164,7 +165,9 @@ RUN set -ex \
     && if [ -f /usr/include/liblzf/lzf.h ]; then ln -s /usr/include/liblzf/lzf.h /usr/include/; fi \
     && git clone https://github.com/phpredis/phpredis /tmp/redis \
     && cd /tmp/redis \
-    && git checkout $(git tag | grep -E '^[.0-9]+$' | sort -V | tail -1) \
+    && tag=$(git tag | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1) \
+    && test -n "$tag" \
+    && git checkout --detach "$tag" \
     && REDIS_ARGS="" \
     && if php -m | grep -q "igbinary"; then REDIS_ARGS="${REDIS_ARGS} --enable-redis-igbinary"; fi \
     && if php -m | grep -q "lz4"; then REDIS_ARGS="${REDIS_ARGS} --enable-redis-lz4 --with-liblz4=/usr"; fi \
@@ -182,10 +185,10 @@ RUN set -ex \
 # The .so files ship inside the image but are NOT loaded by default, so production
 # performance is unaffected and backward compatibility is preserved.
 # Activation is done at runtime by the entrypoint via XDEBUG_ENABLED / XHPROF_ENABLED.
-# Versions match vendor reference (bxphp8231): xdebug 3.5.x, xhprof 2.3.x.
+# Выбираем последние stable-релизы, совместимые с текущим PHP.
 RUN set -eux \
-    && pecl-retry install xdebug-3.5.1 \
-    && pecl-retry install xhprof-2.3.10
+    && pecl-install xdebug \
+    && pecl-install xhprof
 
 # Install PEAR DB (direct download to avoid stale channel data in EOL images)
 ARG PEAR_DB_VERSION=1.12.3

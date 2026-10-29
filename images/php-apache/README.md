@@ -6,24 +6,30 @@ Docker-образы PHP с Apache, оптимизированные для ра�
 
 | PHP | Базовый образ | Совместимость с Битрикс | Примечание |
 |-----|---------------|-------------------------|------------|
-| 8.1 | php:8.1-apache-bookworm | Проекты 2020-2023 | Рекомендуемая версия |
-| 8.2 | php:8.2-apache-bookworm | Проекты 2023+ | Современный стек |
+| 8.1 | php:8.1-apache-bookworm | Устаревшие проекты | Для совместимости |
+| 8.2 | php:8.2-apache-bookworm | Проекты с поддержкой PHP 8.2 | Отдельный тег `8.2` |
+| 8.4 | php:8.4-apache-bookworm | Актуальные проекты с поддержкой PHP 8.4 | Рекомендуемая версия, теги `8.4` и `latest` |
 
-Версии 8.1 и 8.2 поддерживаются в полном паритете: одинаковый набор расширений, конфигураций и инструментов, единый multi-stage Dockerfile.
+Версии 8.1, 8.2 и 8.4 содержат одинаковый набор расширений, конфигураций и инструментов. У каждой версии собственный multi-stage Dockerfile; конфигурации и entrypoint общие. В PHP 8.4 IMAP и PSpell устанавливаются из PECL вместо сборки из исходников PHP.
+
+[Требования 1С-Битрикс](https://dev.1c-bitrix.ru/learning/course/?COURSE_ID=32&LESSON_ID=2593&LESSON_PATH=3903.4862.4868.2593) рекомендуют PHP 8.4 и выше. Перед переводом существующего сайта проверьте совместимость ядра, модулей и собственного кода.
 
 Все образы используют Debian Bookworm из-за наличия `libc-client-dev` для IMAP-расширения.
 
 ### Архивные версии (7.4 / 7.2)
 
-Образы PHP 7.4 и 7.2 перемещены в `bitrix-env/images/archive/` (`php-7.4-apache`, `php-7.2-apache`). Это single-stage сборки, которые не поддерживаются и не обновляются; PHP 7.2 достиг конца жизненного цикла (EOL). Для новых проектов используйте 8.1 или 8.2. Архивные образы оставлены исключительно для совместимости с устаревшими проектами Битрикс, которые ещё не переведены на PHP 8.
+Образы PHP 7.4 и 7.2 перемещены в `bitrix-env/images/archive/` (`php-7.4-apache`, `php-7.2-apache`). Это single-stage сборки, которые не поддерживаются и не обновляются; PHP 7.2 достиг конца жизненного цикла (EOL). Для новых проектов используйте 8.4. Архивные образы оставлены исключительно для совместимости с устаревшими проектами Битрикс, которые ещё не переведены на PHP 8.
 
 ## Быстрый старт
 
 ### Сборка образа
 
 ```bash
-cd bitrix-env/images/php-apache/8.1
-docker build -t bitrix-php:8.1 .
+cd bitrix-env/images/php-apache/8.4
+make build
+make test
+# Полная пересборка с обновлением зависимостей:
+make rebuild
 ```
 
 ### Запуск контейнера
@@ -35,7 +41,7 @@ docker run -d \
   -v $(pwd)/www:/var/www/html \
   -e MEMORY_LIMIT=1024M \
   -e PHP_INI_TYPE=development \
-  msav/bitrix-php-apache:8.1
+  msav/bitrix-php-apache:8.4
 ```
 
 ### Docker Compose
@@ -43,7 +49,7 @@ docker run -d \
 ```yaml
 services:
   php:
-    image: msav/bitrix-php-apache:8.1
+    image: msav/bitrix-php-apache:8.4
     ports:
       - "80:80"
       - "443:443"
@@ -57,7 +63,25 @@ services:
       GROUP_ID: "1000"
 ```
 
-Доступные теги на Docker Hub: `msav/bitrix-php-apache:8.1`, `msav/bitrix-php-apache:8.2`
+Теги образов: `msav/bitrix-php-apache:8.1`, `msav/bitrix-php-apache:8.2`, `msav/bitrix-php-apache:8.4`, `msav/bitrix-php-apache:latest`. Перенос `latest` на 8.4 происходит при первой успешной публикации нового workflow.
+
+### Сборка и публикация PHP 8.4
+
+Workflow `build-php-apache-8.4.yml` собирает образ на self-hosted runner при push в `master`, push тега `v*` или ручном запуске. Для push в `master` сборка требуется при изменениях `images/php-apache/8.4/`, общего `base/`, самого workflow либо при маркерах `#all` / `#php-apache-8.4` в сообщении коммита.
+
+CI использует `--pull --no-cache`: обновляет базовый образ и заново устанавливает зависимости. IMAP и PSpell устанавливаются как `imap-stable` и `pspell-stable` без фиксации числовой версии. Если актуальный стабильный релиз несовместим, сборка завершается ошибкой; отката на старые релизы и пропуска расширений нет. Остальные зависимости сохраняют способ установки образа 8.2.
+
+После обязательных проверок публикуются `8.4`, затем `latest` из той же сборки. Пропуск тестов для 8.4 не предусмотрен. Ошибка сборки или тестов сохраняет предыдущие опубликованные образы. Workflow 8.2 публикует только `8.2` и больше не изменяет `latest`.
+
+Локальный `make build` использует кеш Docker, `make rebuild` полностью пересобирает зависимости, `make test` выполняет проверки, а `make push` публикует только `8.4` после тестов. Публикацией `latest` управляет CI.
+
+Фактические версии PHP и расширений, включая выключенные по умолчанию Xdebug/XHProf, записаны в `/usr/local/share/bitrix/extensions.json` и выводятся в журнал CI:
+
+```bash
+docker run --rm --entrypoint cat msav/bitrix-php-apache:8.4 /usr/local/share/bitrix/extensions.json
+```
+
+Проверки 8.4 включают общий сценарий `base/scripts/test-image.sh` и дополнительные проверки `base/scripts/test-image-8.4.sh`: загрузку библиотек, IMAP SSL/Kerberos, сериализацию и сжатие, возможности Redis, AVIF, режимы development/production, включение профилировщиков, отключение OPcache и HTTPS. Проверки не требуют подключения к внешним сервисам или установки Битрикс. Работоспособность конкретного сайта проверяется отдельно.
 
 ## Переменные окружения
 
@@ -168,13 +192,13 @@ services:
 | ftp | Клиент FTP |
 | gd | Обработка изображений (WebP, JPEG, PNG, XPM, FreeType, AVIF) |
 | gettext | Локализация |
-| imap | Работа с почтой (IMAP, POP3, NNTP) |
+| imap | Работа с почтой (IMAP, POP3, NNTP); в PHP 8.4 — PECL |
 | intl | Интернационализация (ICU) |
 | ldap | Интеграция с Active Directory |
 | mysqli | MySQL/MariaDB |
 | opcache | Кеширование байт-кода |
 | pdo_mysql | PDO для MySQL |
-| pspell | Проверка орфографии |
+| pspell | Проверка орфографии; в PHP 8.4 — PECL |
 | shmop | Shared memory |
 | sockets | Сетевые сокеты |
 | sodium | Современная криптография (libsodium) |
@@ -185,6 +209,8 @@ services:
 | zip | Работа с ZIP-архивами |
 
 ### PECL расширения
+
+В PHP 8.4 дополнительно через PECL устанавливаются `imap-stable` и `pspell-stable`.
 
 | Расширение | Назначение |
 |------------|------------|
